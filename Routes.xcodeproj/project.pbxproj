@@ -8,21 +8,39 @@
 
 /* Begin PBXBuildFile section */
 		454065122CD622B00035A1B2 /* RoutesApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 454065112CD622B00035A1B2 /* RoutesApp.swift */; };
-		454065142CD622B00035A1B2 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 454065132CD622B00035A1B2 /* ContentView.swift */; };
-		454065162CD622B00035A1B2 /* Item.swift in Sources */ = {isa = PBXBuildFile; fileRef = 454065152CD622B00035A1B2 /* Item.swift */; };
 		454065182CD622B10035A1B2 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 454065172CD622B10035A1B2 /* Assets.xcassets */; };
 		4540651C2CD622B10035A1B2 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 4540651B2CD622B10035A1B2 /* Preview Assets.xcassets */; };
+		454065252CD62A350035A1B2 /* Route.swift in Sources */ = {isa = PBXBuildFile; fileRef = 454065242CD62A350035A1B2 /* Route.swift */; };
+		454065272CD798760035A1B2 /* MapView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 454065262CD798760035A1B2 /* MapView.swift */; };
+		4540652C2CD798B40035A1B2 /* StartTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4540652B2CD798B40035A1B2 /* StartTabView.swift */; };
+		4540652E2CD79BD90035A1B2 /* MyRoutesListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4540652D2CD79BD90035A1B2 /* MyRoutesListView.swift */; };
+		454065312CD79DDF0035A1B2 /* Placemark.swift in Sources */ = {isa = PBXBuildFile; fileRef = 454065302CD79DDF0035A1B2 /* Placemark.swift */; };
+		454065342CD7C9240035A1B2 /* LocationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 454065332CD7C9240035A1B2 /* LocationManager.swift */; };
+		454065362CD7C9CA0035A1B2 /* MapManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 454065352CD7C9CA0035A1B2 /* MapManager.swift */; };
+		454065392CD7CDFE0035A1B2 /* LocationDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 454065382CD7CDFE0035A1B2 /* LocationDetailView.swift */; };
+		4540653C2CD7D31B0035A1B2 /* MapStyleView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4540653B2CD7D31B0035A1B2 /* MapStyleView.swift */; };
+		4540653E2CD7D3320035A1B2 /* MapStyleConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4540653D2CD7D3320035A1B2 /* MapStyleConfig.swift */; };
+		454065412CD7D5C40035A1B2 /* RouteLocationsMapView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 454065402CD7D5C40035A1B2 /* RouteLocationsMapView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		4540650E2CD622B00035A1B2 /* Routes.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Routes.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		454065112CD622B00035A1B2 /* RoutesApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RoutesApp.swift; sourceTree = "<group>"; };
-		454065132CD622B00035A1B2 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
-		454065152CD622B00035A1B2 /* Item.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Item.swift; sourceTree = "<group>"; };
 		454065172CD622B10035A1B2 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		454065192CD622B10035A1B2 /* Routes.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Routes.entitlements; sourceTree = "<group>"; };
 		4540651B2CD622B10035A1B2 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
 		4540651D2CD622B10035A1B2 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		454065242CD62A350035A1B2 /* Route.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Route.swift; sourceTree = "<group>"; };
+		454065262CD798760035A1B2 /* MapView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapView.swift; sourceTree = "<group>"; };
+		4540652B2CD798B40035A1B2 /* StartTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StartTabView.swift; sourceTree = "<group>"; };
+		4540652D2CD79BD90035A1B2 /* MyRoutesListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MyRoutesListView.swift; sourceTree = "<group>"; };
+		454065302CD79DDF0035A1B2 /* Placemark.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Placemark.swift; sourceTree = "<group>"; };
+		454065332CD7C9240035A1B2 /* LocationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationManager.swift; sourceTree = "<group>"; };
+		454065352CD7C9CA0035A1B2 /* MapManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapManager.swift; sourceTree = "<group>"; };
+		454065382CD7CDFE0035A1B2 /* LocationDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationDetailView.swift; sourceTree = "<group>"; };
+		4540653B2CD7D31B0035A1B2 /* MapStyleView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapStyleView.swift; sourceTree = "<group>"; };
+		4540653D2CD7D3320035A1B2 /* MapStyleConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapStyleConfig.swift; sourceTree = "<group>"; };
+		454065402CD7D5C40035A1B2 /* RouteLocationsMapView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RouteLocationsMapView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -55,9 +73,13 @@
 		454065102CD622B00035A1B2 /* Routes */ = {
 			isa = PBXGroup;
 			children = (
+				454065372CD7CDEF0035A1B2 /* SharedViews */,
+				454065322CD7C91B0035A1B2 /* Managers */,
+				4540652F2CD79D530035A1B2 /* Models */,
+				4540652A2CD798AB0035A1B2 /* TabView */,
 				454065112CD622B00035A1B2 /* RoutesApp.swift */,
-				454065132CD622B00035A1B2 /* ContentView.swift */,
-				454065152CD622B00035A1B2 /* Item.swift */,
+				454065292CD7988A0035A1B2 /* MyRoutes */,
+				454065282CD7987F0035A1B2 /* Map */,
 				454065172CD622B10035A1B2 /* Assets.xcassets */,
 				454065192CD622B10035A1B2 /* Routes.entitlements */,
 				4540651D2CD622B10035A1B2 /* Info.plist */,
@@ -72,6 +94,67 @@
 				4540651B2CD622B10035A1B2 /* Preview Assets.xcassets */,
 			);
 			path = "Preview Content";
+			sourceTree = "<group>";
+		};
+		454065282CD7987F0035A1B2 /* Map */ = {
+			isa = PBXGroup;
+			children = (
+				4540653A2CD7D30B0035A1B2 /* MapStyle */,
+				454065262CD798760035A1B2 /* MapView.swift */,
+			);
+			path = Map;
+			sourceTree = "<group>";
+		};
+		454065292CD7988A0035A1B2 /* MyRoutes */ = {
+			isa = PBXGroup;
+			children = (
+				4540652D2CD79BD90035A1B2 /* MyRoutesListView.swift */,
+				454065402CD7D5C40035A1B2 /* RouteLocationsMapView.swift */,
+			);
+			path = MyRoutes;
+			sourceTree = "<group>";
+		};
+		4540652A2CD798AB0035A1B2 /* TabView */ = {
+			isa = PBXGroup;
+			children = (
+				4540652B2CD798B40035A1B2 /* StartTabView.swift */,
+			);
+			path = TabView;
+			sourceTree = "<group>";
+		};
+		4540652F2CD79D530035A1B2 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				454065242CD62A350035A1B2 /* Route.swift */,
+				454065302CD79DDF0035A1B2 /* Placemark.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		454065322CD7C91B0035A1B2 /* Managers */ = {
+			isa = PBXGroup;
+			children = (
+				454065332CD7C9240035A1B2 /* LocationManager.swift */,
+				454065352CD7C9CA0035A1B2 /* MapManager.swift */,
+			);
+			path = Managers;
+			sourceTree = "<group>";
+		};
+		454065372CD7CDEF0035A1B2 /* SharedViews */ = {
+			isa = PBXGroup;
+			children = (
+				454065382CD7CDFE0035A1B2 /* LocationDetailView.swift */,
+			);
+			path = SharedViews;
+			sourceTree = "<group>";
+		};
+		4540653A2CD7D30B0035A1B2 /* MapStyle */ = {
+			isa = PBXGroup;
+			children = (
+				4540653B2CD7D31B0035A1B2 /* MapStyleView.swift */,
+				4540653D2CD7D3320035A1B2 /* MapStyleConfig.swift */,
+			);
+			path = MapStyle;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -144,8 +227,17 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				454065142CD622B00035A1B2 /* ContentView.swift in Sources */,
-				454065162CD622B00035A1B2 /* Item.swift in Sources */,
+				454065252CD62A350035A1B2 /* Route.swift in Sources */,
+				4540653C2CD7D31B0035A1B2 /* MapStyleView.swift in Sources */,
+				4540653E2CD7D3320035A1B2 /* MapStyleConfig.swift in Sources */,
+				454065272CD798760035A1B2 /* MapView.swift in Sources */,
+				454065312CD79DDF0035A1B2 /* Placemark.swift in Sources */,
+				4540652E2CD79BD90035A1B2 /* MyRoutesListView.swift in Sources */,
+				454065362CD7C9CA0035A1B2 /* MapManager.swift in Sources */,
+				454065342CD7C9240035A1B2 /* LocationManager.swift in Sources */,
+				4540652C2CD798B40035A1B2 /* StartTabView.swift in Sources */,
+				454065392CD7CDFE0035A1B2 /* LocationDetailView.swift in Sources */,
+				454065412CD7D5C40035A1B2 /* RouteLocationsMapView.swift in Sources */,
 				454065122CD622B00035A1B2 /* RoutesApp.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -281,6 +373,7 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Routes/Info.plist;
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Do you want to grant to us your location permissions?";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
@@ -289,8 +382,8 @@
 				"INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphoneos*]" = UIStatusBarStyleDefault;
 				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphonesimulator*]" = UIStatusBarStyleDefault;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
 				IPHONEOS_DEPLOYMENT_TARGET = 17.2;
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
@@ -299,7 +392,8 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.xaviroigaznar.Routes;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = auto;
-				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -320,6 +414,7 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Routes/Info.plist;
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Do you want to grant to us your location permissions?";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
@@ -328,8 +423,8 @@
 				"INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphoneos*]" = UIStatusBarStyleDefault;
 				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphonesimulator*]" = UIStatusBarStyleDefault;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
 				IPHONEOS_DEPLOYMENT_TARGET = 17.2;
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
@@ -338,7 +433,8 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.xaviroigaznar.Routes;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = auto;
-				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
