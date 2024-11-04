@@ -1,22 +1,21 @@
 //
-//  ContentView.swift
+//  RouteCreatorView.swift
 //  Routes
 //
-//  Created by Xavi Roig Aznar on 2/11/24.
+//  Created by Xavi Roig Aznar on 4/11/24.
 //
 
 import MapKit
 import SwiftUI
 import SwiftData
 
-struct MapView: View {
+struct RouteCreatorView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(LocationManager.self) var locationManager
     @Query private var listPlacemarks: [Placemark]
     @Query(filter: #Predicate<Placemark> {$0.route == nil}) private var searchPlacemarks: [Placemark]
 
     @State private var visibleRegion: MKCoordinateRegion?
-    @State private var selectedPlacemark: Placemark?
     @State var cameraPosition: MapCameraPosition = .userLocation(fallback: .automatic)
     @State var routes = [Route]()
 
@@ -25,20 +24,22 @@ struct MapView: View {
     @FocusState private var searchFieldFocus: Bool
 
     // Route
+    @State private var startingPlacemark: Placemark?
+    @State private var routePlacemarks: [Placemark] = []
+    @State private var circularRoute = true
+    @State private var designRoute = false
     @State private var showRoute = false
     @State private var routeDisplaying = false
     @State private var route: MKRoute?
     @State private var routeDestination: MKMapItem?
     @State private var travelInterval: TimeInterval?
-    @State private var transportType = MKDirectionsTransportType.automobile
     @State private var showSteps = false
     @Namespace private var mapScope
     @State private var mapStyleConfig = MapStyleConfig()
-    @State private var pickMapStyle = false
 
     var body: some View {
         MapReader { proxy in
-            Map(position: $cameraPosition, selection: $selectedPlacemark) {
+            Map(position: $cameraPosition) {
                 UserAnnotation()
                 ForEach(listPlacemarks, id: \.self) { placemark in
                     if !showRoute {
@@ -49,7 +50,11 @@ struct MapView: View {
                                 }
                                 .tint(.yellow)
                             } else {
-                                Marker(placemark.name, coordinate: placemark.coordinate)
+                                Marker(coordinate: placemark.coordinate) {
+                                    Label(placemark.name, systemImage: placemark.name == "Starting point" ?
+                                          circularRoute ? "point.forward.to.point.capsulepath.fill" : "location.north.line" : designRoute && !circularRoute && listPlacemarks.last == placemark ? "stop.circle" : "point.topleft.filled.down.to.point.bottomright.curvepath")
+                                }
+                                .tint(placemark.name == "Starting point" ? .green : designRoute && !circularRoute && listPlacemarks.last == placemark ? .red : .blue)
                             }
                         }.tag(placemark)
                     } else {
@@ -64,14 +69,24 @@ struct MapView: View {
                         .stroke(.blue, lineWidth: 6)
                 }
             }
-            .sheet(item: $selectedPlacemark) { selectedPlacemark in
-                LocationDetailView(
-                    selectedPlacemark: selectedPlacemark,
-                    showRoute: $showRoute,
-                    travelInterval: $travelInterval,
-                    transportType: $transportType
-                )
-                    .presentationDetents([.height(450)])
+            .onTapGesture { position in
+                if let coordinate = proxy.convert(position, from: .local) {
+                    let placemark: Placemark
+                    if startingPlacemark == nil  {
+                        placemark = Placemark(name: "Starting point",
+                                              address: "",
+                                              latitude: coordinate.latitude,
+                                              longitude: coordinate.longitude)
+                        startingPlacemark = placemark
+                    } else {
+                        placemark = Placemark(name: "Route point \(routePlacemarks.count + 1)",
+                                              address: "",
+                                              latitude: coordinate.latitude,
+                                              longitude: coordinate.longitude)
+                        routePlacemarks.append(placemark)
+                    }
+                    modelContext.insert(placemark)
+                }
             }
             .onMapCameraChange{ context in
                 visibleRegion = context.region
@@ -81,16 +96,16 @@ struct MapView: View {
                 updateCameraPosition()
             }
             .mapStyle(mapStyleConfig.mapStyle)
-            .task(id: selectedPlacemark) {
-                if selectedPlacemark != nil {
+            .task(id: startingPlacemark) {
+                if startingPlacemark != nil {
                     routeDisplaying = false
                     showRoute = false
                     route = nil
-                    await fetchRoute()
+//                    await fetchRoute()
                 }
             }
             .onChange(of: showRoute) {
-                selectedPlacemark = nil
+                startingPlacemark = nil
                 if showRoute {
                     withAnimation {
                         routeDisplaying = true
@@ -100,8 +115,16 @@ struct MapView: View {
                     }
                 }
             }
-            .task(id: transportType) {
-                await fetchRoute()
+            .safeAreaInset(edge: .top) {
+                if !searchPlacemarks.isEmpty {
+                    VStack(alignment: .trailing) {
+                        Text("Circular route")
+                            .foregroundStyle(Color("AppSecondary"), Color("AccentColor"))
+                            .font(.headline)
+                        Toggle("", isOn: $circularRoute)
+                    }
+                    .padding()
+                }
             }
             .safeAreaInset(edge: .bottom) {
                 HStack {
@@ -124,11 +147,14 @@ struct MapView: View {
                             }
                             .onSubmit {
                                 Task {
-                                    await MapManager.searchPlaces(
-                                        modelContext,
-                                        searchText: searchText,
-                                        visibleRegion: visibleRegion
-                                    )
+                                    if let placemark = await MapManager.getPlaces(searchText: searchText,
+                                                                                  visibleRegion: visibleRegion) {
+                                        let region = MKCoordinateRegion(center: CLLocationCoordinate2D(latitude: placemark.latitude,
+                                                                                                       longitude: placemark.longitude),
+                                                                        span: MKCoordinateSpan(latitudeDelta: 0.15,
+                                                                                               longitudeDelta: 0.15))
+                                        cameraPosition = .region(region)
+                                    }
                                     searchText = ""
                                 }
                             }
@@ -156,7 +182,7 @@ struct MapView: View {
                                                 }
                                                 ForEach(1..<route.steps.count, id: \.self) { idx in
                                                     VStack(alignment: .leading) {
-                                                        Text("\(transportType == .automobile ? "Drive" : "Walk") \(MapManager.distance(meters: route.steps[idx].distance))")
+                                                        Text("Ride \(MapManager.distance(meters: route.steps[idx].distance))")
                                                             .bold()
                                                         Text(" - \(route.steps[idx].instructions)")
                                                     }
@@ -169,6 +195,13 @@ struct MapView: View {
                                     }
                                 }
                             }
+                        } else {
+                            Button("Design the route", systemImage: "hand.point.up.braille") {
+                                designRoute.toggle()
+                            }
+                            .disabled(startingPlacemark == nil && searchPlacemarks.isEmpty)
+                            .buttonStyle(.borderedProminent)
+                            .fixedSize(horizontal: true, vertical: false)
                         }
                     }
                     .padding()
@@ -182,19 +215,6 @@ struct MapView: View {
                             .buttonStyle(.borderedProminent)
                             .tint(.red)
                         }
-                        Button {
-                            pickMapStyle.toggle()
-                        } label: {
-                            Image(systemName: "globe.americas.fill")
-                                .imageScale(.large)
-                        }
-                        .padding(8)
-                        .background(.thickMaterial)
-                        .clipShape(.circle)
-                        .sheet(isPresented: $pickMapStyle) {
-                            MapStyleView(mapStyleConfig: $mapStyleConfig)
-                                .presentationDetents([.height(275)])
-                        }
                         MapUserLocationButton(scope: mapScope)
                         MapCompass(scope: mapScope)
                             .mapControlVisibility(.visible)
@@ -205,32 +225,7 @@ struct MapView: View {
                     .buttonBorderShape(.circle)
                 }
             }
-//                .onTapGesture { position in
-//                    if let pointedCoordinate = proxy.convert(position, from: .global) {
-//                        let coordinate = CLLocationCoordinate2D(latitude: pointedCoordinate.latitude,
-//                                                                longitude: pointedCoordinate.longitude)
-//                        self.position = MapCameraPosition.region(MKCoordinateRegion(center: coordinate,
-//                                                                                    span: MKCoordinateSpan(latitudeDelta: 0.1,
-//                                                                                                           longitudeDelta: 0.1)))
-//                        print(pointedCoordinate)
-//                        newCoordinate = coordinate
-//                    }
-//                }
         }
-//        .onChange(of: position) { oldValue, newValue in
-//            showingAlert = true
-//        }
-//        .alert("Do you want to change the route?", isPresented: $showingAlert) {
-//            Button("Yes", role: .none) {
-//                if let newCoordinate {
-//                    routes.append(Route(name: "New route", latitude: newCoordinate.latitude, longitude: newCoordinate.longitude))
-//                }
-//                newCoordinate = nil
-//            }
-//            Button("No", role: .cancel) {
-//                newCoordinate = nil
-//            }
-//        }
     }
 
     func updateCameraPosition() {
@@ -249,18 +244,18 @@ struct MapView: View {
     }
 
     func fetchRoute() async {
-        if let userLocation = locationManager.userLocation, let selectedPlacemark {
+        if let userLocation = locationManager.userLocation, let startingPlacemark {
             let request = MKDirections.Request()
             let sourcePlacemark = MKPlacemark(coordinate: userLocation.coordinate)
             let routeSource = MKMapItem(placemark: sourcePlacemark)
-            let destinationPlacemark = MKPlacemark(coordinate: selectedPlacemark.coordinate)
+            let destinationPlacemark = MKPlacemark(coordinate: startingPlacemark.coordinate)
             routeDestination = MKMapItem(placemark: destinationPlacemark)
-            routeDestination?.name = selectedPlacemark.name
+            routeDestination?.name = startingPlacemark.name
             request.source = routeSource
             request.tollPreference = .avoid
             request.highwayPreference = .avoid
             request.destination = routeDestination
-            request.transportType = transportType
+            request.transportType = .automobile
             let directions = MKDirections(request: request)
             let result = try? await directions.calculate()
             route = result?.routes.first
@@ -272,13 +267,15 @@ struct MapView: View {
         routeDisplaying = false
         showRoute = false
         route = nil
-        selectedPlacemark = nil
+        startingPlacemark = nil
+        routePlacemarks = []
         updateCameraPosition()
     }
 }
 
 #Preview {
-    MapView()
+    RouteCreatorView()
         .environment(LocationManager())
         .modelContainer(Route.preview)
 }
+

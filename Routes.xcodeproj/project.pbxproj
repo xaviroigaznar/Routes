@@ -21,6 +21,7 @@
 		4540653C2CD7D31B0035A1B2 /* MapStyleView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4540653B2CD7D31B0035A1B2 /* MapStyleView.swift */; };
 		4540653E2CD7D3320035A1B2 /* MapStyleConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4540653D2CD7D3320035A1B2 /* MapStyleConfig.swift */; };
 		454065412CD7D5C40035A1B2 /* RouteLocationsMapView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 454065402CD7D5C40035A1B2 /* RouteLocationsMapView.swift */; };
+		454065442CD93ED30035A1B2 /* RouteCreatorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 454065432CD93ED30035A1B2 /* RouteCreatorView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -41,6 +42,7 @@
 		4540653B2CD7D31B0035A1B2 /* MapStyleView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapStyleView.swift; sourceTree = "<group>"; };
 		4540653D2CD7D3320035A1B2 /* MapStyleConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapStyleConfig.swift; sourceTree = "<group>"; };
 		454065402CD7D5C40035A1B2 /* RouteLocationsMapView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RouteLocationsMapView.swift; sourceTree = "<group>"; };
+		454065432CD93ED30035A1B2 /* RouteCreatorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RouteCreatorView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -73,6 +75,7 @@
 		454065102CD622B00035A1B2 /* Routes */ = {
 			isa = PBXGroup;
 			children = (
+				454065422CD93EC60035A1B2 /* RouteCreator */,
 				454065372CD7CDEF0035A1B2 /* SharedViews */,
 				454065322CD7C91B0035A1B2 /* Managers */,
 				4540652F2CD79D530035A1B2 /* Models */,
@@ -157,6 +160,14 @@
 			path = MapStyle;
 			sourceTree = "<group>";
 		};
+		454065422CD93EC60035A1B2 /* RouteCreator */ = {
+			isa = PBXGroup;
+			children = (
+				454065432CD93ED30035A1B2 /* RouteCreatorView.swift */,
+			);
+			path = RouteCreator;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -235,6 +246,7 @@
 				4540652E2CD79BD90035A1B2 /* MyRoutesListView.swift in Sources */,
 				454065362CD7C9CA0035A1B2 /* MapManager.swift in Sources */,
 				454065342CD7C9240035A1B2 /* LocationManager.swift in Sources */,
+				454065442CD93ED30035A1B2 /* RouteCreatorView.swift in Sources */,
 				4540652C2CD798B40035A1B2 /* StartTabView.swift in Sources */,
 				454065392CD7CDFE0035A1B2 /* LocationDetailView.swift in Sources */,
 				454065412CD7D5C40035A1B2 /* RouteLocationsMapView.swift in Sources */,
