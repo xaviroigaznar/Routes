@@ -13,7 +13,6 @@ struct RouteDetailView: View {
     @Environment(\.dismiss) private var dismiss
     var route: Route?
     var startPlacemark: Placemark?
-    var finishPlacemark: Placemark?
     var routeSegments: [MKRoute]
     @Binding var showRoute: Bool
     @Binding var cameraPosition: MapCameraPosition
@@ -26,52 +25,25 @@ struct RouteDetailView: View {
 
     var isChanged: Bool {
         guard let startPlacemark else { return false }
-        return (name != startPlacemark.name ||
-                startAddress != startPlacemark.address ||
-                finishAddress != finishPlacemark?.address)
+        return name != startPlacemark.name || startAddress != startPlacemark.address
     }
 
     var body: some View {
         VStack {
             HStack {
                 VStack(alignment: .leading) {
-                    if route != nil {
-                        TextField("Name", text: $name)
-                            .font(.title)
-                        TextField("Start address", text: $startAddress, axis: .vertical)
-                        if finishPlacemark != nil {
-                            TextField("Finish address", text: $finishAddress, axis: .vertical)
+                    TextField("Name", text: $name)
+                        .font(.title)
+                    TextField("Start address", text: $startAddress, axis: .vertical)
+                    if isChanged {
+                        Button("Update") {
+                            startPlacemark?.name = name
+                                .trimmingCharacters(in: .whitespacesAndNewlines)
+                            startPlacemark?.address = startAddress
+                                .trimmingCharacters(in: .whitespacesAndNewlines)
                         }
-                        if isChanged {
-                            Button("Update") {
-                                startPlacemark?.name = name
-                                    .trimmingCharacters(in: .whitespacesAndNewlines)
-                                startPlacemark?.address = startAddress
-                                    .trimmingCharacters(in: .whitespacesAndNewlines)
-                                finishPlacemark?.address = finishAddress
-                                    .trimmingCharacters(in: .whitespacesAndNewlines)
-                            }
-                            .frame(maxWidth: .infinity, alignment: .trailing)
-                            .buttonStyle(.borderedProminent)
-                        }
-                    } else {
-                        Text(startPlacemark?.name ?? "")
-                            .font(.title2)
-                            .fontWeight(.semibold)
-                        Text(startPlacemark?.address ?? "")
-                            .font(.footnote)
-                            .foregroundStyle(.secondary)
-                            .lineLimit(2)
-                            .fixedSize(horizontal: false, vertical: true)
-                            .padding(.trailing)
-                        if finishPlacemark != nil {
-                            Text(finishPlacemark?.address ?? "")
-                                .font(.footnote)
-                                .foregroundStyle(.secondary)
-                                .lineLimit(2)
-                                .fixedSize(horizontal: false, vertical: true)
-                                .padding(.trailing)
-                        }
+                        .frame(maxWidth: .infinity, alignment: .trailing)
+                        .buttonStyle(.borderedProminent)
                     }
                 }
                 .textFieldStyle(.roundedBorder)
@@ -116,13 +88,6 @@ struct RouteDetailView: View {
                             } else {
                                 startPlacemark.route = nil
                             }
-                            if let finishPlacemark {
-                                if finishPlacemark.route == nil {
-                                    route.placemarks.append(finishPlacemark)
-                                } else {
-                                    finishPlacemark.route = nil
-                                }
-                            }
                             dismiss()
                         }
                     } label: {
@@ -160,9 +125,6 @@ struct RouteDetailView: View {
             if let startPlacemark, route != nil {
                 name = startPlacemark.name
                 startAddress = startPlacemark.address
-                if let finishPlacemark {
-                    finishAddress = finishPlacemark.address
-                }
             }
         }
     }

@@ -75,7 +75,7 @@ struct RouteCreatorView: View {
                     showRoute: $showRoute,
                     cameraPosition: $cameraPosition
                 )
-                .presentationDetents([.medium, .large])
+                .presentationDetents([.large])
             }
             .onChange(of: designRoute) {
                 if designRoute {
@@ -110,6 +110,7 @@ struct RouteCreatorView: View {
             }
             .safeAreaInset(edge: .bottom) {
                 bottomSafeAreaView
+                    .padding(20)
             }
         }
     }
@@ -221,18 +222,33 @@ struct RouteCreatorView: View {
                         }
                     }
                 } else {
-                    VStack {
+                    HStack(spacing: 20) {
                         if fetchingRoute {
                             ProgressView()
                                 .progressViewStyle(CircularProgressViewStyle())
                                 .padding()
                         } else {
-                            Button("Design the route", systemImage: "hand.point.up.braille") {
-                                Task { @MainActor in
-                                    fetchingRoute = true
-                                    await fetchRoute()
-                                    designRoute.toggle()
-                                    fetchingRoute = false
+                            VStack {
+                                Button("\(!showRoute ? "Show" : "Hide") the route", systemImage: "hand.point.up.braille") {
+                                    Task { @MainActor in
+                                        fetchingRoute = true
+                                        if (circularRoute ? routePlacemarks.count + 1 : routePlacemarks.count) != routeSegments.count {
+                                            await fetchRoute()
+                                        }
+                                        showRoute.toggle()
+                                        fetchingRoute = false
+                                    }
+                                }
+
+                                Button("Go to route details", systemImage: "hand.point.up.braille") {
+                                    Task { @MainActor in
+                                        fetchingRoute = true
+                                        if (circularRoute ? routePlacemarks.count + 1 : routePlacemarks.count) != routeSegments.count {
+                                            await fetchRoute()
+                                        }
+                                        designRoute.toggle()
+                                        fetchingRoute = false
+                                    }
                                 }
                             }
                             .disabled(startingPlacemark == nil && searchPlacemarks.isEmpty)
@@ -242,7 +258,7 @@ struct RouteCreatorView: View {
                     }
                 }
             }
-            .padding()
+
             VStack {
                 if !searchPlacemarks.isEmpty {
                     Button {
@@ -265,6 +281,7 @@ struct RouteCreatorView: View {
             .padding()
             .buttonBorderShape(.circle)
         }
+        .padding(20)
     }
 
     func updateCameraPosition() {
