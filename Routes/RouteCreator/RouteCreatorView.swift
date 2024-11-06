@@ -251,7 +251,7 @@ struct RouteCreatorView: View {
                                     }
                                 }
                             }
-                            .disabled(startingPlacemark == nil && searchPlacemarks.isEmpty)
+                            .disabled(routePlacemarks.isEmpty)
                             .buttonStyle(.borderedProminent)
                             .fixedSize(horizontal: true, vertical: false)
                         }

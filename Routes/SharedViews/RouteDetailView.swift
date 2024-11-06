@@ -28,6 +28,14 @@ struct RouteDetailView: View {
         return name != startPlacemark.name || startAddress != startPlacemark.address
     }
 
+    var distance: String {
+        var distance: Double = 0
+        routeSegments.forEach { routeSegment in
+            distance += routeSegment.distance.magnitude
+        }
+        return String(format: "%.2f", distance / 1000)
+    }
+
     var body: some View {
         VStack {
             HStack {
@@ -35,6 +43,9 @@ struct RouteDetailView: View {
                     TextField("Name", text: $name)
                         .font(.title)
                     TextField("Start address", text: $startAddress, axis: .vertical)
+                    Text("Distance: \(distance)km")
+                        .font(.headline)
+                        .foregroundStyle(Color.accentColor, .appSecondary)
                     if isChanged {
                         Button("Update") {
                             startPlacemark?.name = name
