@@ -5,9 +5,10 @@
 //  Created by Xavi Roig Aznar on 5/11/24.
 //
 
-import SwiftUI
+import Charts
 import MapKit
 import SwiftData
+import SwiftUI
 
 struct RouteDetailView: View {
     @Environment(\.dismiss) private var dismiss
@@ -20,6 +21,11 @@ struct RouteDetailView: View {
     @State private var name = ""
     @State private var startAddress = ""
     @State private var finishAddress = ""
+
+    @State private var unevenness: Double = 0
+    @State private var elevations: [Double] = []
+    @State private var kilometers: [Double] = []
+    @State private var fetchingUnevenness = false
 
     @State private var lookaroundScene: MKLookAroundScene?
 
@@ -81,6 +87,18 @@ struct RouteDetailView: View {
             }
             .frame(height: 200)
             .padding()
+            if unevenness != 0 {
+                Text("Unevennesss: \(String(format: "%.2f", unevenness))m+")
+                    .font(.headline)
+                    .foregroundStyle(.appSecondary, Color.accentColor)
+                Chart {
+                    ForEach(Array(elevations.enumerated()), id: \.1) { index, elevation in
+                        BarMark(x: .value("Distance", kilometers[index]), y: .value("Elevation", elevation))
+                    }
+                }
+                .frame(height: 200)
+                .padding()
+            }
             if let lookaroundScene {
                 LookAroundPreview(initialScene: lookaroundScene)
                     .frame(height: 200)
@@ -108,22 +126,28 @@ struct RouteDetailView: View {
                     .tint(inList ? .red : .green)
                     .disabled((name.isEmpty || isChanged))
                 } else {
-                    HStack {
-                        Button("Open in maps", systemImage: "map") {
-                            if let startPlacemark {
-                                let placemark = MKPlacemark(coordinate: startPlacemark.coordinate)
-                                let mapItem = MKMapItem(placemark: placemark)
-                                mapItem.name = startPlacemark.name
-                                mapItem.openInMaps()
+                    if !fetchingUnevenness {
+                        HStack {
+                            Button("Display unevenness", systemImage: "mountain.2") {
+                                fetchingUnevenness = true
+                                Task {
+                                    try await calculateUnevenness()
+                                    fetchingUnevenness = false
+                                }
                             }
+                            .fixedSize(horizontal: true, vertical: false)
+                            Button("Show Route", systemImage: "location.north") {
+                                showRoute = true
+                                dismiss()
+                            }
+                            .fixedSize(horizontal: true, vertical: false)
                         }
-                        .fixedSize(horizontal: true, vertical: false)
-                        Button("Show Route", systemImage: "location.north") {
-                            showRoute.toggle()
-                        }
-                        .fixedSize(horizontal: true, vertical: false)
+                        .buttonStyle(.bordered)
+                    } else {
+                        ProgressView()
+                            .progressViewStyle(CircularProgressViewStyle())
+                            .padding()
                     }
-                    .buttonStyle(.bordered)
                 }
             }
             Spacer()
@@ -137,6 +161,77 @@ struct RouteDetailView: View {
                 name = startPlacemark.name
                 startAddress = startPlacemark.address
             }
+        }
+    }
+}
+
+private extension RouteDetailView {
+    func calculateUnevenness() async throws {
+        guard routeSegments.count > 0 else {
+            return // No unevenness if only one or zero coordinates
+        }
+
+        var totalElevationChange: Double = 0
+        var totalDistance: Double = 0
+        var previousElevation: Double? = nil
+
+        try await routeSegments.enumerated().asyncForEach { index, routeSegment in
+            var coordinates = [CLLocationCoordinate2D](repeating: kCLLocationCoordinate2DInvalid, count: routeSegment.polyline.pointCount)
+            routeSegment.polyline.getCoordinates(&coordinates, range: NSRange(location: 0, length: routeSegment.polyline.pointCount))
+            try await coordinates.enumerated().asyncForEach { index, coordinate in
+                if index == 0 {
+                    // Insert 0.0 at the start for the initial point
+                    kilometers.insert(0.0, at: 0)
+                } else {
+                    totalDistance += calculateKilometers(from: coordinates[index - 1], to: coordinate)
+
+                    // Append the cumulative distance in kilometers
+                    kilometers.append(totalDistance / 1000.0)
+                }
+                let elevation = try await getElevation(latitude: coordinate.latitude, longitude: coordinate.longitude)
+
+                if let previousElevation = previousElevation, elevation > previousElevation {
+                    // Calculate elevation difference between consecutive points
+                    let elevationDifference = elevation - previousElevation
+                    totalElevationChange += elevationDifference
+                }
+
+                // Update previous elevation for the next comparison
+                previousElevation = elevation
+            }
+        }
+
+        unevenness = totalElevationChange
+    }
+
+    func calculateKilometers(from startCoordinate: CLLocationCoordinate2D, to finalCoordinate: CLLocationCoordinate2D) -> Double {
+        // Convert coordinates to CLLocation to calculate distance between them
+        let start = CLLocation(latitude: startCoordinate.latitude, longitude: startCoordinate.longitude)
+        let end = CLLocation(latitude: finalCoordinate.latitude, longitude: finalCoordinate.longitude)
+
+        // Calculate the distance between consecutive points
+        return start.distance(from: end) // distance in meters
+    }
+
+    func getElevation(latitude: Double, longitude: Double) async throws -> Double {
+        let apiKey = "AIzaSyC5MyFG43XdKJMV26CP_IWYU1cNPH361rQ"
+        // Construct the URL for the Elevation API request
+        let urlString = "https://maps.googleapis.com/maps/api/elevation/json?locations=\(latitude),\(longitude)&key=\(apiKey)"
+        guard let url = URL(string: urlString) else {
+            throw NSError(domain: "Invalid URL", code: 400, userInfo: nil)
+        }
+
+        // Perform the data task with async/await
+        let (data, _) = try await URLSession.shared.data(from: url)
+
+        // Decode the JSON response
+        if let json = try JSONSerialization.jsonObject(with: data, options: []) as? [String: Any],
+           let results = json["results"] as? [[String: Any]],
+           let elevation = results.first?["elevation"] as? Double {
+            elevations.append(elevation)
+            return elevation
+        } else {
+            throw NSError(domain: "Parsing error", code: 500, userInfo: nil)
         }
     }
 
