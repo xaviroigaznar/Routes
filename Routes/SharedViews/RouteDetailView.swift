@@ -12,8 +12,9 @@ import SwiftUI
 
 struct RouteDetailView: View {
     @Environment(\.dismiss) private var dismiss
-    var route: Route?
+    @Binding var route: Route?
     var startPlacemark: Placemark?
+    var routePlacemarks: [Placemark]
     var routeSegments: [MKRoute]
     @Binding var showRoute: Bool
     @Binding var cameraPosition: MapCameraPosition
@@ -74,19 +75,19 @@ struct RouteDetailView: View {
                         .foregroundStyle(.gray)
                 }
             }
-            Map(position: $cameraPosition) {
-                UserAnnotation()
-                if !routeSegments.isEmpty {
-                    Group {
-                        ForEach(routeSegments, id: \.self) { routeSegment in
-                            MapPolyline(routeSegment.polyline)
-                                .stroke(.blue, lineWidth: 6)
-                        }
-                    }
-                }
-            }
-            .frame(height: 200)
-            .padding()
+//            Map(position: $cameraPosition) {
+//                UserAnnotation()
+//                if !routeSegments.isEmpty {
+//                    Group {
+//                        ForEach(routeSegments, id: \.self) { routeSegment in
+//                            MapPolyline(routeSegment.polyline)
+//                                .stroke(.blue, lineWidth: 6)
+//                        }
+//                    }
+//                }
+//            }
+//            .frame(height: 200)
+//            .padding()
             if unevenness != 0 {
                 Text("Unevennesss: \(String(format: "%.2f", unevenness))m+")
                     .font(.headline)
@@ -114,6 +115,7 @@ struct RouteDetailView: View {
                         if let startPlacemark {
                             if startPlacemark.route == nil {
                                 route.placemarks.append(startPlacemark)
+                                route.placemarks.append(contentsOf: routePlacemarks)
                             } else {
                                 startPlacemark.route = nil
                             }
@@ -136,10 +138,14 @@ struct RouteDetailView: View {
                                 }
                             }
                             .fixedSize(horizontal: true, vertical: false)
-                            Button("Show Route", systemImage: "location.north") {
-                                showRoute = true
-                                dismiss()
+                            Button("Create Route", systemImage: "location.north") {
+                                route = Route(name: name,
+                                              latitude: startPlacemark?.latitude,
+                                              longitude: startPlacemark?.longitude,
+                                              distance: Double(distance),
+                                              unevenness: unevenness)
                             }
+                            .disabled(name.isEmpty)
                             .fixedSize(horizontal: true, vertical: false)
                         }
                         .buttonStyle(.bordered)
@@ -147,6 +153,7 @@ struct RouteDetailView: View {
                         ProgressView()
                             .progressViewStyle(CircularProgressViewStyle())
                             .padding()
+                            .frame(alignment: .center)
                     }
                 }
             }
@@ -250,8 +257,9 @@ private extension RouteDetailView {
     let route = try! container.mainContext.fetch(fetchDescriptor)[0]
     let startPlacemark = route.placemarks[0]
     return RouteDetailView(
-        route: route,
+        route: .constant(route),
         startPlacemark: startPlacemark,
+        routePlacemarks: [],
         routeSegments: [],
         showRoute: .constant(false),
         cameraPosition: .constant(.userLocation(fallback: .automatic))
@@ -264,7 +272,9 @@ private extension RouteDetailView {
     let placemarks = try! container.mainContext.fetch(fetchDescriptor)
     let startPlacemark = placemarks[0]
     return RouteDetailView(
+        route: .constant(nil),
         startPlacemark: startPlacemark,
+        routePlacemarks: [],
         routeSegments: [],
         showRoute: .constant(false),
         cameraPosition: .constant(.userLocation(fallback: .automatic))

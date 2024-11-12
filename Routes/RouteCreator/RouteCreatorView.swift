@@ -31,6 +31,7 @@ struct RouteCreatorView: View {
     @State private var fetchingRoute = false
     @State private var showRoute = false
     @State private var routeDisplaying = false
+    @State private var route: Route?
     @State private var routeSegments: [MKRoute] = []
     @State private var routeDestination: MKMapItem?
     @State private var travelInterval: TimeInterval?
@@ -70,7 +71,9 @@ struct RouteCreatorView: View {
             .mapStyle(mapStyleConfig.mapStyle)
             .sheet(isPresented: $showDetail) {
                 RouteDetailView(
+                    route: $route,
                     startPlacemark: startingPlacemark,
+                    routePlacemarks: routePlacemarks,
                     routeSegments: routeSegments,
                     showRoute: $showRoute,
                     cameraPosition: $cameraPosition
@@ -185,42 +188,52 @@ struct RouteCreatorView: View {
                         }
                     }
                 if routeDisplaying {
-                    HStack {
-                        Button("Clear Route", systemImage: "xmark.circle") {
-                            removeRoute()
-                        }
-                        .buttonStyle(.borderedProminent)
-                        .fixedSize(horizontal: true, vertical: false)
-                        Button("Show Steps", systemImage: "location.north") {
-                            showSteps.toggle()
-                        }
-                        .buttonStyle(.borderedProminent)
-                        .fixedSize(horizontal: true, vertical: false)
-                        .sheet(isPresented: $showSteps) {
-                            if !routeSegments.isEmpty {
-                                NavigationStack {
-//                                    List {
-//                                        HStack {
-//                                            Image(systemName: "mappin.circle.fill")
-//                                                .foregroundStyle(.red)
-//                                            Text("From my location")
-//                                            Spacer()
-//                                        }
-//                                        ForEach(1..<route.steps.count, id: \.self) { idx in
-//                                            VStack(alignment: .leading) {
-//                                                Text("Ride \(MapManager.distance(meters: route.steps[idx].distance))")
-//                                                    .bold()
-//                                                Text(" - \(route.steps[idx].instructions)")
-//                                            }
-//                                        }
-//                                    }
-//                                    .listStyle(.plain)
-//                                    .navigationTitle("Steps")
-//                                    .navigationBarTitleDisplayMode(.inline)
+                    VStack {
+                        HStack {
+                            Button("Clear Route", systemImage: "xmark.circle") {
+                                removeRoute()
+                            }
+                            Button("Show Steps", systemImage: "location.north") {
+                                showSteps.toggle()
+                            }
+                            .sheet(isPresented: $showSteps) {
+                                if !routeSegments.isEmpty {
+                                    NavigationStack {
+                                        //                                    List {
+                                        //                                        HStack {
+                                        //                                            Image(systemName: "mappin.circle.fill")
+                                        //                                                .foregroundStyle(.red)
+                                        //                                            Text("From my location")
+                                        //                                            Spacer()
+                                        //                                        }
+                                        //                                        ForEach(1..<route.steps.count, id: \.self) { idx in
+                                        //                                            VStack(alignment: .leading) {
+                                        //                                                Text("Ride \(MapManager.distance(meters: route.steps[idx].distance))")
+                                        //                                                    .bold()
+                                        //                                                Text(" - \(route.steps[idx].instructions)")
+                                        //                                            }
+                                        //                                        }
+                                        //                                    }
+                                        //                                    .listStyle(.plain)
+                                        //                                    .navigationTitle("Steps")
+                                        //                                    .navigationBarTitleDisplayMode(.inline)
+                                    }
                                 }
                             }
                         }
+                        Button("Go to route details", systemImage: "hand.point.up.braille") {
+                            Task { @MainActor in
+                                fetchingRoute = true
+                                if (circularRoute ? routePlacemarks.count + 1 : routePlacemarks.count) != routeSegments.count {
+                                    await fetchRoute()
+                                }
+                                designRoute.toggle()
+                                fetchingRoute = false
+                            }
+                        }
                     }
+                    .buttonStyle(.borderedProminent)
+                    .fixedSize(horizontal: true, vertical: false)
                 } else {
                     HStack(spacing: 20) {
                         if fetchingRoute {
@@ -228,27 +241,14 @@ struct RouteCreatorView: View {
                                 .progressViewStyle(CircularProgressViewStyle())
                                 .padding()
                         } else {
-                            VStack {
-                                Button("\(!showRoute ? "Show" : "Hide") the route", systemImage: "hand.point.up.braille") {
-                                    Task { @MainActor in
-                                        fetchingRoute = true
-                                        if (circularRoute ? routePlacemarks.count + 1 : routePlacemarks.count) != routeSegments.count {
-                                            await fetchRoute()
-                                        }
-                                        showRoute.toggle()
-                                        fetchingRoute = false
+                            Button("\(!showRoute ? "Show" : "Hide") the route", systemImage: "hand.point.up.braille") {
+                                Task { @MainActor in
+                                    fetchingRoute = true
+                                    if (circularRoute ? routePlacemarks.count + 1 : routePlacemarks.count) != routeSegments.count {
+                                        await fetchRoute()
                                     }
-                                }
-
-                                Button("Go to route details", systemImage: "hand.point.up.braille") {
-                                    Task { @MainActor in
-                                        fetchingRoute = true
-                                        if (circularRoute ? routePlacemarks.count + 1 : routePlacemarks.count) != routeSegments.count {
-                                            await fetchRoute()
-                                        }
-                                        designRoute.toggle()
-                                        fetchingRoute = false
-                                    }
+                                    showRoute.toggle()
+                                    fetchingRoute = false
                                 }
                             }
                             .disabled(routePlacemarks.isEmpty)
