@@ -52,7 +52,7 @@ enum MapManager {
     }
 
     static func removeSearchResults(_ modelContext: ModelContext) {
-        let searchPredicate = #Predicate<Placemark> { $0.route != nil }
+        let searchPredicate = #Predicate<Placemark> { $0.route == nil }
         try? modelContext.delete(model: Placemark.self, where: searchPredicate)
     }
 

@@ -65,8 +65,7 @@ struct MyRoutesListView: View {
                             .autocorrectionDisabled()
                         Button("OK") {
                             if !routeName.isEmpty {
-                                let route = Route(name: routeName.trimmingCharacters(in: .whitespacesAndNewlines),
-                                                  circularRoute: true)
+                                let route = Route(name: routeName.trimmingCharacters(in: .whitespacesAndNewlines))
                                 modelContext.insert(route)
                                 routeName = ""
                                 path.append(route)

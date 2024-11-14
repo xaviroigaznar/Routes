@@ -76,19 +76,6 @@ struct RouteDetailView: View {
                         .foregroundStyle(.gray)
                 }
             }
-//            Map(position: $cameraPosition) {
-//                UserAnnotation()
-//                if !routeSegments.isEmpty {
-//                    Group {
-//                        ForEach(routeSegments, id: \.self) { routeSegment in
-//                            MapPolyline(routeSegment.polyline)
-//                                .stroke(.blue, lineWidth: 6)
-//                        }
-//                    }
-//                }
-//            }
-//            .frame(height: 200)
-//            .padding()
             if unevenness != 0 {
                 Text("Unevennesss: \(String(format: "%.2f", unevenness))m+")
                     .font(.headline)
@@ -141,11 +128,11 @@ struct RouteDetailView: View {
                             .fixedSize(horizontal: true, vertical: false)
                             Button("Create Route", systemImage: "location.north") {
                                 route = Route(name: name,
-                                              circularRoute: circularRoute,
                                               latitude: startPlacemark?.latitude,
                                               longitude: startPlacemark?.longitude,
                                               distance: Double(distance),
                                               unevenness: unevenness)
+                                route?.circularRoute = circularRoute
                                 if let startPlacemark {
                                     route?.placemarks.append(startPlacemark)
                                     route?.placemarks.append(contentsOf: routePlacemarks)

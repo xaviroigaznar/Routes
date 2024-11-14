@@ -11,7 +11,6 @@ import SwiftData
 @Model
 class Route {
     var name: String
-    var circularRoute: Bool
     var latitude: Double?
     var longitude: Double?
     var latitudeDelta: Double?
@@ -20,9 +19,9 @@ class Route {
     var unevenness: Double?
     @Relationship(deleteRule: .cascade)
     var placemarks: [Placemark] = []
+    var circularRoute: Bool = true
 
     init(name: String,
-         circularRoute: Bool,
          latitude: Double? = nil,
          longitude: Double? = nil,
          latitudeDelta: Double? = nil,
@@ -30,7 +29,6 @@ class Route {
          distance: Double? = nil,
          unevenness: Double? = nil) {
         self.name = name
-        self.circularRoute = circularRoute
         self.latitude = latitude
         self.longitude = longitude
         self.latitudeDelta = latitudeDelta
@@ -63,7 +61,6 @@ extension Route {
 
         let paris = Route(
             name: "Paris",
-            circularRoute: false,
             latitude: 48.856788,
             longitude: 2.351077,
             latitudeDelta: 0.15,
