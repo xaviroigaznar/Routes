@@ -17,6 +17,7 @@ struct RouteDetailView: View {
     var routePlacemarks: [Placemark]
     var routeSegments: [MKRoute]
     @Binding var showRoute: Bool
+    @Binding var circularRoute: Bool
     @Binding var cameraPosition: MapCameraPosition
 
     @State private var name = ""
@@ -140,10 +141,16 @@ struct RouteDetailView: View {
                             .fixedSize(horizontal: true, vertical: false)
                             Button("Create Route", systemImage: "location.north") {
                                 route = Route(name: name,
+                                              circularRoute: circularRoute,
                                               latitude: startPlacemark?.latitude,
                                               longitude: startPlacemark?.longitude,
                                               distance: Double(distance),
                                               unevenness: unevenness)
+                                if let startPlacemark {
+                                    route?.placemarks.append(startPlacemark)
+                                    route?.placemarks.append(contentsOf: routePlacemarks)
+                                    startPlacemark.route = route
+                                }
                             }
                             .disabled(name.isEmpty)
                             .fixedSize(horizontal: true, vertical: false)
@@ -262,6 +269,7 @@ private extension RouteDetailView {
         routePlacemarks: [],
         routeSegments: [],
         showRoute: .constant(false),
+        circularRoute: .constant(true),
         cameraPosition: .constant(.userLocation(fallback: .automatic))
     )
 }
@@ -277,6 +285,7 @@ private extension RouteDetailView {
         routePlacemarks: [],
         routeSegments: [],
         showRoute: .constant(false),
+        circularRoute: .constant(true),
         cameraPosition: .constant(.userLocation(fallback: .automatic))
     )
 }

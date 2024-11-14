@@ -97,14 +97,8 @@ struct RouteLocationsMapView: View {
                 MapManager.removeSearchResults(modelContext)
             }
         }) { selectedPlacemark in
-            LocationDetailView(
-                route: route,
-                selectedPlacemark: selectedPlacemark,
-                showRoute: .constant(false),
-                travelInterval: .constant(nil),
-                transportType: .constant(.automobile)
-            )
-                .presentationDetents([.height(450)])
+            RouteTrackView(selectedPlacemark: selectedPlacemark, cameraPosition: $cameraPosition)
+                .presentationDetents([.large])
         }
         .safeAreaInset(edge: .bottom) {
             VStack {

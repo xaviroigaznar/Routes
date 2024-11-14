@@ -76,6 +76,7 @@ struct RouteCreatorView: View {
                     routePlacemarks: routePlacemarks,
                     routeSegments: routeSegments,
                     showRoute: $showRoute,
+                    circularRoute: $circularRoute,
                     cameraPosition: $cameraPosition
                 )
                 .presentationDetents([.large])
@@ -314,7 +315,6 @@ struct RouteCreatorView: View {
         if circularRoute, let startingPoint = routePlacemarks.last, let finishPoint = startingPlacemark {
             await fetchRouteSegment(startingPoint: startingPoint, finishPoint: finishPoint)
         }
-//        showRoute = true
     }
 
     func fetchRouteSegment(startingPoint: Placemark, finishPoint: Placemark) async {
