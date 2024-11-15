@@ -123,27 +123,20 @@ struct RouteCreatorView: View {
         Map(position: $cameraPosition) {
             UserAnnotation()
             ForEach(listPlacemarks, id: \.self) { placemark in
-                if !showRoute {
-                    Group {
-                        if placemark.route != nil {
-                            Marker(coordinate: placemark.coordinate) {
-                                Label(placemark.name, systemImage: "star")
-                            }
-                            .tint(.yellow)
-                        } else {
-                            Marker(coordinate: placemark.coordinate) {
-                                Label(placemark.name, systemImage: placemark.name == "Starting point" ?
-                                      circularRoute ? "point.forward.to.point.capsulepath.fill" : "location.north.line" : designRoute && !circularRoute && listPlacemarks.last == placemark ? "stop.circle" : "point.topleft.filled.down.to.point.bottomright.curvepath")
-                            }
-                            .tint(placemark.name == "Starting point" ? .green : designRoute && !circularRoute && listPlacemarks.last == placemark ? .red : .blue)
+                Group {
+                    if placemark.route != nil {
+                        Marker(coordinate: placemark.coordinate) {
+                            Label(placemark.name, systemImage: "star")
                         }
-                    }.tag(placemark)
-                } else {
-                    if let routeDestination {
-                        Marker(item: routeDestination)
-                            .tint(.green)
+                        .tint(.yellow)
+                    } else {
+                        Marker(coordinate: placemark.coordinate) {
+                            Label(placemark.name, systemImage: placemark.name == "Starting point" ?
+                                  circularRoute ? "point.forward.to.point.capsulepath.fill" : "location.north.line" : designRoute && !circularRoute && listPlacemarks.last == placemark ? "stop.circle" : "point.topleft.filled.down.to.point.bottomright.curvepath")
+                        }
+                        .tint(placemark.name == "Starting point" ? .green : designRoute && !circularRoute && listPlacemarks.last == placemark ? .red : .blue)
                     }
-                }
+                }.tag(placemark)
             }
             if !routeSegments.isEmpty, routeDisplaying {
                 Group {
@@ -177,14 +170,9 @@ struct RouteCreatorView: View {
                     }
                     .onSubmit {
                         Task {
-                            if let placemark = await MapManager.getPlaces(searchText: searchText,
-                                                                          visibleRegion: visibleRegion) {
-                                let region = MKCoordinateRegion(center: CLLocationCoordinate2D(latitude: placemark.latitude,
-                                                                                               longitude: placemark.longitude),
-                                                                span: MKCoordinateSpan(latitudeDelta: 0.15,
-                                                                                       longitudeDelta: 0.15))
-                                cameraPosition = .region(region)
-                            }
+                            await MapManager.searchPlaces(modelContext,
+                                                          searchText: searchText,
+                                                          visibleRegion: visibleRegion)
                             searchText = ""
                         }
                     }
