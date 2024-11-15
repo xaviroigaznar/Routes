@@ -8,6 +8,8 @@
 
 /* Begin PBXBuildFile section */
 		4534174F2CDA8825009890FD /* RouteDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4534174E2CDA8825009890FD /* RouteDetailView.swift */; };
+		453417532CE71349009890FD /* RouteIntermediatePlacemark.swift in Sources */ = {isa = PBXBuildFile; fileRef = 453417522CE71349009890FD /* RouteIntermediatePlacemark.swift */; };
+		453417552CE71364009890FD /* PointOfInterestPlacemark.swift in Sources */ = {isa = PBXBuildFile; fileRef = 453417542CE71364009890FD /* PointOfInterestPlacemark.swift */; };
 		454065122CD622B00035A1B2 /* RoutesApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 454065112CD622B00035A1B2 /* RoutesApp.swift */; };
 		454065182CD622B10035A1B2 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 454065172CD622B10035A1B2 /* Assets.xcassets */; };
 		4540651C2CD622B10035A1B2 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 4540651B2CD622B10035A1B2 /* Preview Assets.xcassets */; };
@@ -27,6 +29,8 @@
 
 /* Begin PBXFileReference section */
 		4534174E2CDA8825009890FD /* RouteDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RouteDetailView.swift; sourceTree = "<group>"; };
+		453417522CE71349009890FD /* RouteIntermediatePlacemark.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RouteIntermediatePlacemark.swift; sourceTree = "<group>"; };
+		453417542CE71364009890FD /* PointOfInterestPlacemark.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PointOfInterestPlacemark.swift; sourceTree = "<group>"; };
 		4540650E2CD622B00035A1B2 /* Routes.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Routes.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		454065112CD622B00035A1B2 /* RoutesApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RoutesApp.swift; sourceTree = "<group>"; };
 		454065172CD622B10035A1B2 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -132,6 +136,8 @@
 			children = (
 				454065242CD62A350035A1B2 /* Route.swift */,
 				454065302CD79DDF0035A1B2 /* Placemark.swift */,
+				453417522CE71349009890FD /* RouteIntermediatePlacemark.swift */,
+				453417542CE71364009890FD /* PointOfInterestPlacemark.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -247,6 +253,7 @@
 				4540653E2CD7D3320035A1B2 /* MapStyleConfig.swift in Sources */,
 				454065272CD798760035A1B2 /* MapView.swift in Sources */,
 				454065312CD79DDF0035A1B2 /* Placemark.swift in Sources */,
+				453417552CE71364009890FD /* PointOfInterestPlacemark.swift in Sources */,
 				4540652E2CD79BD90035A1B2 /* MyRoutesListView.swift in Sources */,
 				454065362CD7C9CA0035A1B2 /* MapManager.swift in Sources */,
 				454065342CD7C9240035A1B2 /* LocationManager.swift in Sources */,
@@ -254,6 +261,7 @@
 				4540652C2CD798B40035A1B2 /* StartTabView.swift in Sources */,
 				454065392CD7CDFE0035A1B2 /* RouteTrackView.swift in Sources */,
 				454065412CD7D5C40035A1B2 /* RouteLocationsMapView.swift in Sources */,
+				453417532CE71349009890FD /* RouteIntermediatePlacemark.swift in Sources */,
 				454065122CD622B00035A1B2 /* RoutesApp.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

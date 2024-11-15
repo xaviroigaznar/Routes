@@ -20,6 +20,8 @@ class Route {
     @Relationship(deleteRule: .cascade)
     var placemarks: [Placemark] = []
     var circularRoute: Bool = true
+    var routeIntermediatePlacemarks: [RouteIntermediatePlacemark] = []
+    var pointOfInterestPlacemarks: [PointOfInterestPlacemark] = []
 
     init(name: String,
          latitude: Double? = nil,
