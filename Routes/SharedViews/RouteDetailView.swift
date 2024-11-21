@@ -14,9 +14,10 @@ struct RouteDetailView: View {
     @Environment(\.dismiss) private var dismiss
     @Binding var route: Route?
     var startPlacemark: Placemark?
-    var routePlacemarks: [Placemark]
+    var routePlacemarks: [RouteIntermediatePlacemark]
     var routeSegments: [MKRoute]
     @Binding var showRoute: Bool
+    @Binding var circularRoute: Bool
     @Binding var cameraPosition: MapCameraPosition
 
     @State private var name = ""
@@ -75,19 +76,6 @@ struct RouteDetailView: View {
                         .foregroundStyle(.gray)
                 }
             }
-//            Map(position: $cameraPosition) {
-//                UserAnnotation()
-//                if !routeSegments.isEmpty {
-//                    Group {
-//                        ForEach(routeSegments, id: \.self) { routeSegment in
-//                            MapPolyline(routeSegment.polyline)
-//                                .stroke(.blue, lineWidth: 6)
-//                        }
-//                    }
-//                }
-//            }
-//            .frame(height: 200)
-//            .padding()
             if unevenness != 0 {
                 Text("Unevennesss: \(String(format: "%.2f", unevenness))m+")
                     .font(.headline)
@@ -114,8 +102,8 @@ struct RouteDetailView: View {
                     Button {
                         if let startPlacemark {
                             if startPlacemark.route == nil {
-                                route.placemarks.append(startPlacemark)
-                                route.placemarks.append(contentsOf: routePlacemarks)
+                                route.startingPlacemark = startPlacemark
+                                route.routeIntermediatePlacemarks.append(contentsOf: routePlacemarks)
                             } else {
                                 startPlacemark.route = nil
                             }
@@ -144,6 +132,12 @@ struct RouteDetailView: View {
                                               longitude: startPlacemark?.longitude,
                                               distance: Double(distance),
                                               unevenness: unevenness)
+                                route?.circularRoute = circularRoute
+                                if let startPlacemark {
+                                    route?.startingPlacemark = startPlacemark
+                                    route?.routeIntermediatePlacemarks.append(contentsOf: routePlacemarks)
+                                    startPlacemark.route = route
+                                }
                             }
                             .disabled(name.isEmpty)
                             .fixedSize(horizontal: true, vertical: false)
@@ -255,13 +249,14 @@ private extension RouteDetailView {
     let container = Route.preview
     let fetchDescriptor = FetchDescriptor<Route>()
     let route = try! container.mainContext.fetch(fetchDescriptor)[0]
-    let startPlacemark = route.placemarks[0]
+    let startPlacemark = route.startingPlacemark
     return RouteDetailView(
         route: .constant(route),
         startPlacemark: startPlacemark,
         routePlacemarks: [],
         routeSegments: [],
         showRoute: .constant(false),
+        circularRoute: .constant(true),
         cameraPosition: .constant(.userLocation(fallback: .automatic))
     )
 }
@@ -277,6 +272,7 @@ private extension RouteDetailView {
         routePlacemarks: [],
         routeSegments: [],
         showRoute: .constant(false),
+        circularRoute: .constant(true),
         cameraPosition: .constant(.userLocation(fallback: .automatic))
     )
 }

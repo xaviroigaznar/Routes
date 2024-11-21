@@ -30,7 +30,6 @@ struct MapView: View {
     @State private var route: MKRoute?
     @State private var routeDestination: MKMapItem?
     @State private var travelInterval: TimeInterval?
-    @State private var transportType = MKDirectionsTransportType.automobile
     @State private var showSteps = false
     @Namespace private var mapScope
     @State private var mapStyleConfig = MapStyleConfig()
@@ -65,13 +64,8 @@ struct MapView: View {
                 }
             }
             .sheet(item: $selectedPlacemark) { selectedPlacemark in
-                LocationDetailView(
-                    selectedPlacemark: selectedPlacemark,
-                    showRoute: $showRoute,
-                    travelInterval: $travelInterval,
-                    transportType: $transportType
-                )
-                    .presentationDetents([.height(450)])
+                RouteTrackView(selectedPlacemark: selectedPlacemark, cameraPosition: $cameraPosition)
+                    .presentationDetents([.large])
             }
             .onMapCameraChange{ context in
                 visibleRegion = context.region
@@ -99,9 +93,6 @@ struct MapView: View {
                         }
                     }
                 }
-            }
-            .task(id: transportType) {
-                await fetchRoute()
             }
             .safeAreaInset(edge: .bottom) {
                 HStack {
@@ -156,7 +147,7 @@ struct MapView: View {
                                                 }
                                                 ForEach(1..<route.steps.count, id: \.self) { idx in
                                                     VStack(alignment: .leading) {
-                                                        Text("\(transportType == .automobile ? "Drive" : "Walk") \(MapManager.distance(meters: route.steps[idx].distance))")
+                                                        Text("Bike \(MapManager.distance(meters: route.steps[idx].distance))")
                                                             .bold()
                                                         Text(" - \(route.steps[idx].instructions)")
                                                     }
@@ -260,7 +251,6 @@ struct MapView: View {
             request.tollPreference = .avoid
             request.highwayPreference = .avoid
             request.destination = routeDestination
-            request.transportType = transportType
             let directions = MKDirections(request: request)
             let result = try? await directions.calculate()
             route = result?.routes.first
