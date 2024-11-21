@@ -15,6 +15,8 @@ class Route {
     var longitude: Double?
     var latitudeDelta: Double?
     var longitudeDelta: Double?
+    var distance: Double?
+    var unevenness: Double?
     @Relationship(deleteRule: .cascade)
     var placemarks: [Placemark] = []
 
@@ -22,12 +24,16 @@ class Route {
          latitude: Double? = nil,
          longitude: Double? = nil,
          latitudeDelta: Double? = nil,
-         longitudeDelta: Double? = nil) {
+         longitudeDelta: Double? = nil,
+         distance: Double? = nil,
+         unevenness: Double? = nil) {
         self.name = name
         self.latitude = latitude
         self.longitude = longitude
         self.latitudeDelta = latitudeDelta
         self.longitudeDelta = longitudeDelta
+        self.distance = distance
+        self.unevenness = unevenness
     }
 
     var region: MKCoordinateRegion? {

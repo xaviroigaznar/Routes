@@ -253,10 +253,12 @@ struct MapView: View {
             let request = MKDirections.Request()
             let sourcePlacemark = MKPlacemark(coordinate: userLocation.coordinate)
             let routeSource = MKMapItem(placemark: sourcePlacemark)
-            let destinatinPlacemark = MKPlacemark(coordinate: selectedPlacemark.coordinate)
-            routeDestination = MKMapItem(placemark: destinatinPlacemark)
+            let destinationPlacemark = MKPlacemark(coordinate: selectedPlacemark.coordinate)
+            routeDestination = MKMapItem(placemark: destinationPlacemark)
             routeDestination?.name = selectedPlacemark.name
             request.source = routeSource
+            request.tollPreference = .avoid
+            request.highwayPreference = .avoid
             request.destination = routeDestination
             request.transportType = transportType
             let directions = MKDirections(request: request)
