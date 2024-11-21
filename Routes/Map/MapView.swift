@@ -104,9 +104,6 @@ struct MapView: View {
                             }
                         }
                     }
-                    .onChange(of: poiSelectedIndex) {
-                        print("POI Selected \(pointsOfInterest[poiSelectedIndex])")
-                    }
                     .safeAreaInset(edge: .bottom) {
                         safeAreaInsetView
                     }
@@ -169,6 +166,14 @@ private extension MapView {
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Done") {
                         showPoisPicker = false
+                        Task {
+                            await MapManager.searchPlaces(
+                                modelContext,
+                                searchText: pointsOfInterest[poiSelectedIndex],
+                                visibleRegion: visibleRegion
+                            )
+                            poiSelectedIndex = 0
+                        }
                     }
                 }
             }
