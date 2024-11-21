@@ -14,7 +14,7 @@ struct RouteDetailView: View {
     @Environment(\.dismiss) private var dismiss
     @Binding var route: Route?
     var startPlacemark: Placemark?
-    var routePlacemarks: [Placemark]
+    var routePlacemarks: [RouteIntermediatePlacemark]
     var routeSegments: [MKRoute]
     @Binding var showRoute: Bool
     @Binding var circularRoute: Bool
@@ -102,8 +102,8 @@ struct RouteDetailView: View {
                     Button {
                         if let startPlacemark {
                             if startPlacemark.route == nil {
-                                route.placemarks.append(startPlacemark)
-                                route.placemarks.append(contentsOf: routePlacemarks)
+                                route.startingPlacemark = startPlacemark
+                                route.routeIntermediatePlacemarks.append(contentsOf: routePlacemarks)
                             } else {
                                 startPlacemark.route = nil
                             }
@@ -134,8 +134,8 @@ struct RouteDetailView: View {
                                               unevenness: unevenness)
                                 route?.circularRoute = circularRoute
                                 if let startPlacemark {
-                                    route?.placemarks.append(startPlacemark)
-                                    route?.placemarks.append(contentsOf: routePlacemarks)
+                                    route?.startingPlacemark = startPlacemark
+                                    route?.routeIntermediatePlacemarks.append(contentsOf: routePlacemarks)
                                     startPlacemark.route = route
                                 }
                             }
@@ -249,7 +249,7 @@ private extension RouteDetailView {
     let container = Route.preview
     let fetchDescriptor = FetchDescriptor<Route>()
     let route = try! container.mainContext.fetch(fetchDescriptor)[0]
-    let startPlacemark = route.placemarks[0]
+    let startPlacemark = route.startingPlacemark
     return RouteDetailView(
         route: .constant(route),
         startPlacemark: startPlacemark,

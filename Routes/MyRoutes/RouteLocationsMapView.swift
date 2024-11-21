@@ -18,7 +18,7 @@ struct RouteLocationsMapView: View {
     @Query(filter: #Predicate<Placemark> {$0.route == nil}) private var searchPlacemarks: [Placemark]
 
     private var listPlacemarks: [Placemark] {
-        searchPlacemarks + route.placemarks
+        searchPlacemarks/* + route.placemarks*/
     }
     var route: Route
 

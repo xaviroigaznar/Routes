@@ -26,7 +26,7 @@ struct MyRoutesListView: View {
                                     .foregroundStyle(.accent)
                                 VStack(alignment: .leading) {
                                     Text(route.name)
-                                    Text("^[\(route.placemarks.count) location](inflect: true)")
+                                    Text("^[\(route.routeIntermediatePlacemarks.count) location](inflect: true)")
                                         .font(.caption)
                                         .foregroundStyle(.secondary)
                                 }

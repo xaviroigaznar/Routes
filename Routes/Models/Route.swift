@@ -18,7 +18,7 @@ class Route {
     var distance: Double?
     var unevenness: Double?
     @Relationship(deleteRule: .cascade)
-    var placemarks: [Placemark] = []
+    var startingPlacemark: Placemark?
     var circularRoute: Bool = true
     var routeIntermediatePlacemarks: [RouteIntermediatePlacemark] = []
     var pointOfInterestPlacemarks: [PointOfInterestPlacemark] = []
@@ -81,9 +81,13 @@ extension Route {
                 Placemark(name: "Panthéon", address: "Place du Panthéon, 75005 Paris, France", latitude: 48.845616, longitude: 2.345996),
             ]
         }
-        placeMarks.forEach {placemark in
-            paris.placemarks.append(placemark)
-        }
+//        placeMarks.enumerated().forEach { index, placemark in
+//            if index == 0 {
+                paris.startingPlacemark = Placemark(name: "Louvre Museum", address: "93 Rue de Rivoli, 75001 Paris, France", latitude: 48.861950, longitude: 2.336902)
+//            } else {
+//                paris.routeIntermediatePlacemarks.applying(placemark)
+//            }
+//        }
         return container
     }
 }
