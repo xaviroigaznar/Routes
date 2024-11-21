@@ -40,6 +40,9 @@ struct MapView: View {
 
     // Points of Interest
     @State private var showPoisPicker = false
+    @State private var pointOfInterest: String?
+    @State private var poiSelectedIndex = 0
+    private var pointsOfInterest = ["Cafetería", "Gasolinera", "Taller de bicis"]
 
     // Bindings
     var isPlacemarkSelected: Binding<Bool> {
@@ -56,52 +59,60 @@ struct MapView: View {
     }
 
     var body: some View {
-        MapReader { proxy in
-            mapView
-            .alert("What do you want?", isPresented: isPlacemarkSelected) {
-                Button("Show track") {
-                    showTrack = true
-                }
-                Button("Search Points of Interest during the route") {
-                    showPoisPicker = true
-                }
-                Button("Dismiss", role: .cancel) {
-                    selectedPlacemark = nil
-                }
-            }
-            .sheet(isPresented: $showTrack) {
-                RouteTrackView(selectedPlacemark: selectedPlacemark, cameraPosition: $cameraPosition)
-                    .presentationDetents([.large])
-            }
-            .onMapCameraChange { context in
-                visibleRegion = context.region
-            }
-            .onAppear {
-                MapManager.removeSearchResults(modelContext)
-                updateCameraPosition()
-            }
-            .mapStyle(mapStyleConfig.mapStyle)
-            .task(id: selectedPlacemark) {
-                if selectedPlacemark != nil {
-                    routeDisplaying = false
-                    showRoute = false
-                    route = nil
-                    await fetchRoute()
-                }
-            }
-            .onChange(of: showRoute) {
-                selectedPlacemark = nil
-                if showRoute {
-                    withAnimation {
-                        routeDisplaying = true
-                        if let rect = route?.polyline.boundingMapRect {
-                            cameraPosition = .rect(rect)
+        VStack {
+            MapReader { proxy in
+                mapView
+                    .alert("What do you want?", isPresented: isPlacemarkSelected) {
+                        Button("Show track") {
+                            showTrack = true
+                        }
+                        Button("Search Points of Interest during the route") {
+                            showPoisPicker = true
+                        }
+                        Button("Dismiss", role: .cancel) {
+                            selectedPlacemark = nil
                         }
                     }
-                }
+                    .sheet(isPresented: $showTrack) {
+                        RouteTrackView(selectedPlacemark: selectedPlacemark, cameraPosition: $cameraPosition)
+                            .presentationDetents([.large])
+                    }
+                    .onMapCameraChange { context in
+                        visibleRegion = context.region
+                    }
+                    .onAppear {
+                        MapManager.removeSearchResults(modelContext)
+                        updateCameraPosition()
+                    }
+                    .mapStyle(mapStyleConfig.mapStyle)
+                    .task(id: selectedPlacemark) {
+                        if selectedPlacemark != nil {
+                            routeDisplaying = false
+                            showRoute = false
+                            route = nil
+                            await fetchRoute()
+                        }
+                    }
+                    .onChange(of: showRoute) {
+                        selectedPlacemark = nil
+                        if showRoute {
+                            withAnimation {
+                                routeDisplaying = true
+                                if let rect = route?.polyline.boundingMapRect {
+                                    cameraPosition = .rect(rect)
+                                }
+                            }
+                        }
+                    }
+                    .onChange(of: poiSelectedIndex) {
+                        print("POI Selected \(pointsOfInterest[poiSelectedIndex])")
+                    }
+                    .safeAreaInset(edge: .bottom) {
+                        safeAreaInsetView
+                    }
             }
-            .safeAreaInset(edge: .bottom) {
-                safeAreaInsetView
+            if showPoisPicker {
+                poisPickerView
             }
         }
     }
@@ -136,6 +147,33 @@ private extension MapView {
                     .stroke(.blue, lineWidth: 6)
             }
         }
+    }
+
+    @ViewBuilder var poisPickerView: some View {
+        NavigationView {
+            Picker("Select a Point of Interest", selection: $poiSelectedIndex) {
+                ForEach(0..<pointsOfInterest.count, id: \.self) { index in
+                    HStack {
+                        Text(pointsOfInterest[index])
+                            .font(.headline)
+                    }
+                }
+            }
+            .pickerStyle(WheelPickerStyle())
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") {
+                        showPoisPicker = false
+                    }
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Done") {
+                        showPoisPicker = false
+                    }
+                }
+            }
+        }
+        .frame(height: 200)
     }
 
     @ViewBuilder var safeAreaInsetView: some View {
