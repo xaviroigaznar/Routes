@@ -25,6 +25,7 @@
 		4540653E2CD7D3320035A1B2 /* MapStyleConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4540653D2CD7D3320035A1B2 /* MapStyleConfig.swift */; };
 		454065412CD7D5C40035A1B2 /* RouteLocationsMapView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 454065402CD7D5C40035A1B2 /* RouteLocationsMapView.swift */; };
 		454065442CD93ED30035A1B2 /* RouteCreatorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 454065432CD93ED30035A1B2 /* RouteCreatorView.swift */; };
+		45C045D92CF0CF8300026FF0 /* PointOfInterestModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 45C045D82CF0CF8300026FF0 /* PointOfInterestModel.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -49,6 +50,7 @@
 		4540653D2CD7D3320035A1B2 /* MapStyleConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapStyleConfig.swift; sourceTree = "<group>"; };
 		454065402CD7D5C40035A1B2 /* RouteLocationsMapView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RouteLocationsMapView.swift; sourceTree = "<group>"; };
 		454065432CD93ED30035A1B2 /* RouteCreatorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RouteCreatorView.swift; sourceTree = "<group>"; };
+		45C045D82CF0CF8300026FF0 /* PointOfInterestModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PointOfInterestModel.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -138,6 +140,7 @@
 				454065302CD79DDF0035A1B2 /* Placemark.swift */,
 				453417522CE71349009890FD /* RouteIntermediatePlacemark.swift */,
 				453417542CE71364009890FD /* PointOfInterestPlacemark.swift */,
+				45C045D82CF0CF8300026FF0 /* PointOfInterestModel.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -256,6 +259,7 @@
 				453417552CE71364009890FD /* PointOfInterestPlacemark.swift in Sources */,
 				4540652E2CD79BD90035A1B2 /* MyRoutesListView.swift in Sources */,
 				454065362CD7C9CA0035A1B2 /* MapManager.swift in Sources */,
+				45C045D92CF0CF8300026FF0 /* PointOfInterestModel.swift in Sources */,
 				454065342CD7C9240035A1B2 /* LocationManager.swift in Sources */,
 				454065442CD93ED30035A1B2 /* RouteCreatorView.swift in Sources */,
 				4540652C2CD798B40035A1B2 /* StartTabView.swift in Sources */,

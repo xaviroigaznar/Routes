@@ -42,7 +42,7 @@ struct MapView: View {
     @State private var showPoisPicker = false
     @State private var pointOfInterest: String?
     @State private var poiSelectedIndex = 0
-    private var pointsOfInterest = ["Cafetería", "Gasolinera", "Taller de bicis"]
+    private var pointsOfInterest: [PointOfInterestModel] = [.cafe, .gasStation, .hotel, .mechanic]
 
     // Bindings
     var isPlacemarkSelected: Binding<Bool> {
@@ -151,7 +151,7 @@ private extension MapView {
             Picker("Select a Point of Interest", selection: $poiSelectedIndex) {
                 ForEach(0..<pointsOfInterest.count, id: \.self) { index in
                     HStack {
-                        Text(pointsOfInterest[index])
+                        Text(pointsOfInterest[index].name)
                             .font(.headline)
                     }
                 }
@@ -169,7 +169,7 @@ private extension MapView {
                         Task {
                             await MapManager.searchPlaces(
                                 modelContext,
-                                searchText: pointsOfInterest[poiSelectedIndex],
+                                searchText: pointsOfInterest[poiSelectedIndex].name,
                                 visibleRegion: visibleRegion
                             )
                             poiSelectedIndex = 0

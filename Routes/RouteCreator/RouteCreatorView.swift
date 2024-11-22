@@ -191,30 +191,6 @@ struct RouteCreatorView: View {
                             Button("Show Steps", systemImage: "location.north") {
                                 showSteps.toggle()
                             }
-                            .sheet(isPresented: $showSteps) {
-                                if !routeSegments.isEmpty {
-                                    NavigationStack {
-                                        //                                    List {
-                                        //                                        HStack {
-                                        //                                            Image(systemName: "mappin.circle.fill")
-                                        //                                                .foregroundStyle(.red)
-                                        //                                            Text("From my location")
-                                        //                                            Spacer()
-                                        //                                        }
-                                        //                                        ForEach(1..<route.steps.count, id: \.self) { idx in
-                                        //                                            VStack(alignment: .leading) {
-                                        //                                                Text("Ride \(MapManager.distance(meters: route.steps[idx].distance))")
-                                        //                                                    .bold()
-                                        //                                                Text(" - \(route.steps[idx].instructions)")
-                                        //                                            }
-                                        //                                        }
-                                        //                                    }
-                                        //                                    .listStyle(.plain)
-                                        //                                    .navigationTitle("Steps")
-                                        //                                    .navigationBarTitleDisplayMode(.inline)
-                                    }
-                                }
-                            }
                         }
                         Button("Go to route details", systemImage: "hand.point.up.braille") {
                             Task { @MainActor in
