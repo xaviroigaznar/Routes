@@ -10,6 +10,7 @@ import MapKit
 
 @Model
 class Placemark: Identifiable, Hashable {
+    let uuid = UUID()
     var name: String
     var address: String
     var latitude: Double

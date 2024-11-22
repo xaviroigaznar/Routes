@@ -10,6 +10,7 @@ import MapKit
 
 @Model
 class PointOfInterestPlacemark {
+    let uuid = UUID()
     var name: String
     var address: String
     var latitude: Double

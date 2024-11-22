@@ -13,10 +13,12 @@ struct MapView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(LocationManager.self) var locationManager
     @Query private var listPlacemarks: [Placemark]
+    @Query private var listPoisPlacemarks: [PointOfInterestPlacemark]
     @Query(filter: #Predicate<Placemark> {$0.route == nil}) private var searchPlacemarks: [Placemark]
 
     @State private var visibleRegion: MKCoordinateRegion?
     @State private var selectedPlacemark: Placemark?
+    @State private var selectedPlacemarkId: UUID?
     @State var cameraPosition: MapCameraPosition = .userLocation(fallback: .automatic)
     @State var routes = [Route]()
 
@@ -40,7 +42,7 @@ struct MapView: View {
 
     // Points of Interest
     @State private var showPoisPicker = false
-    @State private var pointOfInterest: String?
+    @State private var selectedPointOfInterest: PointOfInterestPlacemark?
     @State private var poiSelectedIndex = 0
     private var pointsOfInterest: [PointOfInterestModel] = [.cafe, .gasStation, .hotel, .mechanic]
 
@@ -48,13 +50,7 @@ struct MapView: View {
     var isPlacemarkSelected: Binding<Bool> {
         Binding(
             get: { selectedPlacemark != nil },
-            set: { newValue in
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                    if !newValue {
-                        selectedPlacemark = nil
-                    }
-                }
-            }
+            set: { _ in }
         )
     }
 
@@ -93,6 +89,19 @@ struct MapView: View {
                             await fetchRoute()
                         }
                     }
+                    .task(id: selectedPlacemarkId) {
+                        if selectedPlacemark == nil {
+                            selectedPlacemark = listPlacemarks.first { placemark in
+                                placemark.uuid == selectedPlacemarkId
+                            }
+                        }
+                        selectedPointOfInterest = listPoisPlacemarks.first { placemark in
+                            placemark.uuid == selectedPlacemarkId
+                        }
+                        if let selectedPointOfInterest {
+                            selectedPlacemark?.route?.pointOfInterestPlacemarks.append(selectedPointOfInterest)
+                        }
+                    }
                     .onChange(of: showRoute) {
                         selectedPlacemark = nil
                         if showRoute {
@@ -118,7 +127,7 @@ struct MapView: View {
 // MARK: - Inner Views
 private extension MapView {
     @ViewBuilder var mapView: some View {
-        Map(position: $cameraPosition, selection: $selectedPlacemark) {
+        Map(position: $cameraPosition, selection: $selectedPlacemarkId) {
             UserAnnotation()
             ForEach(listPlacemarks, id: \.self) { placemark in
                 if !showRoute {
@@ -131,13 +140,20 @@ private extension MapView {
                         } else {
                             Marker(placemark.name, coordinate: placemark.coordinate)
                         }
-                    }.tag(placemark)
+                    }.tag(placemark.uuid)
                 } else {
                     if let routeDestination {
                         Marker(item: routeDestination)
                             .tint(.green)
                     }
                 }
+            }
+            ForEach(listPoisPlacemarks, id: \.self) { placemark in
+                Marker(coordinate: placemark.coordinate) {
+                    Label(placemark.name, systemImage: "star")
+                }
+                .tint(.green)
+                .tag(placemark.uuid)
             }
             if let route, routeDisplaying {
                 MapPolyline(route.polyline)
@@ -167,7 +183,7 @@ private extension MapView {
                     Button("Done") {
                         showPoisPicker = false
                         Task {
-                            await MapManager.searchPlaces(
+                            await MapManager.searchPointsOfInterest(
                                 modelContext,
                                 searchText: pointsOfInterest[poiSelectedIndex].name,
                                 visibleRegion: visibleRegion
