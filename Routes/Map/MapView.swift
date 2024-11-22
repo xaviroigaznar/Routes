@@ -183,74 +183,46 @@ private extension MapView {
 
     @ViewBuilder var safeAreaInsetView: some View {
         HStack {
-            VStack {
-                TextField("Search...", text: $searchText)
-                    .textFieldStyle(.roundedBorder)
-                    .autocorrectionDisabled()
-                    .textInputAutocapitalization(.never)
-                    .focused($searchFieldFocus)
-                    .overlay(alignment: .trailing) {
-                        if searchFieldFocus {
-                            Button {
-                                searchText = ""
-                                searchFieldFocus = false
-                            } label: {
-                                Image(systemName: "xmark.circle.fill")
-                            }
-                            .offset(x: -5)
-                        }
+            Spacer()
+            if routeDisplaying {
+                HStack {
+                    Button("Clear Route", systemImage: "xmark.circle") {
+                        removeRoute()
                     }
-                    .onSubmit {
-                        Task {
-                            await MapManager.searchPlaces(
-                                modelContext,
-                                searchText: searchText,
-                                visibleRegion: visibleRegion
-                            )
-                            searchText = ""
-                        }
+                    .buttonStyle(.borderedProminent)
+                    .fixedSize(horizontal: true, vertical: false)
+                    Button("Show Steps", systemImage: "location.north") {
+                        showSteps.toggle()
                     }
-                if routeDisplaying {
-                    HStack {
-                        Button("Clear Route", systemImage: "xmark.circle") {
-                            removeRoute()
-                        }
-                        .buttonStyle(.borderedProminent)
-                        .fixedSize(horizontal: true, vertical: false)
-                        Button("Show Steps", systemImage: "location.north") {
-                            showSteps.toggle()
-                        }
-                        .buttonStyle(.borderedProminent)
-                        .fixedSize(horizontal: true, vertical: false)
-                        .sheet(isPresented: $showSteps) {
-                            if let route {
-                                NavigationStack {
-                                    List {
-                                        HStack {
-                                            Image(systemName: "mappin.circle.fill")
-                                                .foregroundStyle(.red)
-                                            Text("From my location")
-                                            Spacer()
-                                        }
-                                        ForEach(1..<route.steps.count, id: \.self) { idx in
-                                            VStack(alignment: .leading) {
-                                                Text("Bike \(MapManager.distance(meters: route.steps[idx].distance))")
-                                                    .bold()
-                                                Text(" - \(route.steps[idx].instructions)")
-                                            }
+                    .buttonStyle(.borderedProminent)
+                    .fixedSize(horizontal: true, vertical: false)
+                    .sheet(isPresented: $showSteps) {
+                        if let route {
+                            NavigationStack {
+                                List {
+                                    HStack {
+                                        Image(systemName: "mappin.circle.fill")
+                                            .foregroundStyle(.red)
+                                        Text("From my location")
+                                        Spacer()
+                                    }
+                                    ForEach(1..<route.steps.count, id: \.self) { idx in
+                                        VStack(alignment: .leading) {
+                                            Text("Bike \(MapManager.distance(meters: route.steps[idx].distance))")
+                                                .bold()
+                                            Text(" - \(route.steps[idx].instructions)")
                                         }
                                     }
-                                    .listStyle(.plain)
-                                    .navigationTitle("Steps")
-                                    .navigationBarTitleDisplayMode(.inline)
                                 }
+                                .listStyle(.plain)
+                                .navigationTitle("Steps")
+                                .navigationBarTitleDisplayMode(.inline)
                             }
                         }
                     }
                 }
             }
-            .padding()
-            VStack {
+            VStack(alignment: .trailing) {
                 if !searchPlacemarks.isEmpty {
                     Button {
                         MapManager.removeSearchResults(modelContext)
@@ -282,6 +254,7 @@ private extension MapView {
             .padding()
             .buttonBorderShape(.circle)
         }
+        .padding()
     }
 }
 
