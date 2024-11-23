@@ -43,7 +43,7 @@ struct RouteTrackView: View {
                         }
                     }
                 })
-                .frame(height: 400)
+                .frame(height: 500)
                 .padding()
             } else {
                 ProgressView()
@@ -138,7 +138,7 @@ struct RouteTrackView: View {
         let sourcePlacemark = MKPlacemark(coordinate: from.coordinate)
         let routeSource = MKMapItem(placemark: sourcePlacemark)
         let destinationPlacemark = MKPlacemark(coordinate: to.coordinate)
-        var routeDestination = MKMapItem(placemark: destinationPlacemark)
+        let routeDestination = MKMapItem(placemark: destinationPlacemark)
         routeDestination.name = to.name
         request.source = routeSource
         request.destination = routeDestination

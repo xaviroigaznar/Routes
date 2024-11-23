@@ -47,7 +47,7 @@ struct MapView: View {
                 selectedPlacemark != nil
             },
             set: { newValue in
-                if !newValue {
+                if !newValue, showPoisPicker {
                     selectedPlacemark = nil
                 }
             }
@@ -81,6 +81,10 @@ struct MapView: View {
                         MapManager.removePointsOfInterestResults(modelContext)
                         MapManager.removeSearchResults(modelContext)
                         updateCameraPosition()
+                    }
+                    .onDisappear {
+                        selectedPlacemark = nil
+                        selectedPointOfInterest = nil
                     }
                     .mapStyle(mapStyleConfig.mapStyle)
                     .task(id: selectedPlacemarkId) {
