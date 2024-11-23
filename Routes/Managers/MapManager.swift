@@ -7,6 +7,7 @@
 
 import MapKit
 import SwiftData
+import SwiftUI
 
 enum MapManager {
     @MainActor
@@ -75,6 +76,17 @@ enum MapManager {
     static func removeSearchResults(_ modelContext: ModelContext) {
         let searchPredicate = #Predicate<Placemark> { $0.route == nil }
         try? modelContext.delete(model: Placemark.self, where: searchPredicate)
+    }
+
+    static func removePointsOfInterestResults(_ modelContext: ModelContext) {
+        // Fetch all instances of PointOfInterestPlacemark
+        let fetchRequest = FetchDescriptor<PointOfInterestPlacemark>()
+        let allInstances = try? modelContext.fetch(fetchRequest)
+        if let allInstances {
+            for instance in allInstances {
+                modelContext.delete(instance)
+            }
+        }
     }
 
     static func distance(meters: Double) -> String {

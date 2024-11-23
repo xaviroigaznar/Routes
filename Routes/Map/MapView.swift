@@ -27,12 +27,6 @@ struct MapView: View {
     @FocusState private var searchFieldFocus: Bool
 
     // Route
-    @State private var showRoute = false
-    @State private var routeDisplaying = false
-    @State private var route: MKRoute?
-    @State private var routeDestination: MKMapItem?
-    @State private var travelInterval: TimeInterval?
-    @State private var showSteps = false
     @Namespace private var mapScope
     @State private var mapStyleConfig = MapStyleConfig()
     @State private var pickMapStyle = false
@@ -49,8 +43,14 @@ struct MapView: View {
     // Bindings
     var isPlacemarkSelected: Binding<Bool> {
         Binding(
-            get: { selectedPlacemark != nil },
-            set: { _ in }
+            get: {
+                selectedPlacemark != nil
+            },
+            set: { newValue in
+                if !newValue {
+                    selectedPlacemark = nil
+                }
+            }
         )
     }
 
@@ -63,6 +63,7 @@ struct MapView: View {
                             showTrack = true
                         }
                         Button("Search Points of Interest during the route") {
+                            MapManager.removePointsOfInterestResults(modelContext)
                             showPoisPicker = true
                         }
                         Button("Dismiss", role: .cancel) {
@@ -77,18 +78,11 @@ struct MapView: View {
                         visibleRegion = context.region
                     }
                     .onAppear {
+                        MapManager.removePointsOfInterestResults(modelContext)
                         MapManager.removeSearchResults(modelContext)
                         updateCameraPosition()
                     }
                     .mapStyle(mapStyleConfig.mapStyle)
-                    .task(id: selectedPlacemark) {
-                        if selectedPlacemark != nil {
-                            routeDisplaying = false
-                            showRoute = false
-                            route = nil
-                            await fetchRoute()
-                        }
-                    }
                     .task(id: selectedPlacemarkId) {
                         if selectedPlacemark == nil {
                             selectedPlacemark = listPlacemarks.first { placemark in
@@ -100,17 +94,6 @@ struct MapView: View {
                         }
                         if let selectedPointOfInterest {
                             selectedPlacemark?.route?.pointOfInterestPlacemarks.append(selectedPointOfInterest)
-                        }
-                    }
-                    .onChange(of: showRoute) {
-                        selectedPlacemark = nil
-                        if showRoute {
-                            withAnimation {
-                                routeDisplaying = true
-                                if let rect = route?.polyline.boundingMapRect {
-                                    cameraPosition = .rect(rect)
-                                }
-                            }
                         }
                     }
                     .safeAreaInset(edge: .bottom) {
@@ -130,34 +113,31 @@ private extension MapView {
         Map(position: $cameraPosition, selection: $selectedPlacemarkId) {
             UserAnnotation()
             ForEach(listPlacemarks, id: \.self) { placemark in
-                if !showRoute {
-                    Group {
-                        if placemark.route != nil {
-                            Marker(coordinate: placemark.coordinate) {
-                                Label(placemark.name, systemImage: "star")
-                            }
-                            .tint(.yellow)
-                        } else {
-                            Marker(placemark.name, coordinate: placemark.coordinate)
+                Group {
+                    if placemark.route != nil {
+                        Marker(coordinate: placemark.coordinate) {
+                            Label(placemark.name, systemImage: "star")
                         }
-                    }.tag(placemark.uuid)
-                } else {
-                    if let routeDestination {
-                        Marker(item: routeDestination)
-                            .tint(.green)
+                        .tint(.yellow)
+                    } else {
+                        Marker(placemark.name, coordinate: placemark.coordinate)
                     }
-                }
+                }.tag(placemark.uuid)
             }
             ForEach(listPoisPlacemarks, id: \.self) { placemark in
                 Marker(coordinate: placemark.coordinate) {
-                    Label(placemark.name, systemImage: "star")
+                    if pointsOfInterest[poiSelectedIndex].name == PointOfInterestModel.cafe.name {
+                        Label(placemark.name, systemImage: "cup.and.saucer.fill")
+                    } else if pointsOfInterest[poiSelectedIndex].name == PointOfInterestModel.gasStation.name {
+                        Label(placemark.name, systemImage: "flame")
+                    } else if pointsOfInterest[poiSelectedIndex].name == PointOfInterestModel.hotel.name {
+                        Label(placemark.name, systemImage: "house")
+                    } else if pointsOfInterest[poiSelectedIndex].name == PointOfInterestModel.mechanic.name {
+                        Label(placemark.name, systemImage: "figure.outdoor.cycle")
+                    }
                 }
                 .tint(.green)
                 .tag(placemark.uuid)
-            }
-            if let route, routeDisplaying {
-                MapPolyline(route.polyline)
-                    .stroke(.blue, lineWidth: 6)
             }
         }
     }
@@ -200,44 +180,6 @@ private extension MapView {
     @ViewBuilder var safeAreaInsetView: some View {
         HStack {
             Spacer()
-            if routeDisplaying {
-                HStack {
-                    Button("Clear Route", systemImage: "xmark.circle") {
-                        removeRoute()
-                    }
-                    .buttonStyle(.borderedProminent)
-                    .fixedSize(horizontal: true, vertical: false)
-                    Button("Show Steps", systemImage: "location.north") {
-                        showSteps.toggle()
-                    }
-                    .buttonStyle(.borderedProminent)
-                    .fixedSize(horizontal: true, vertical: false)
-                    .sheet(isPresented: $showSteps) {
-                        if let route {
-                            NavigationStack {
-                                List {
-                                    HStack {
-                                        Image(systemName: "mappin.circle.fill")
-                                            .foregroundStyle(.red)
-                                        Text("From my location")
-                                        Spacer()
-                                    }
-                                    ForEach(1..<route.steps.count, id: \.self) { idx in
-                                        VStack(alignment: .leading) {
-                                            Text("Bike \(MapManager.distance(meters: route.steps[idx].distance))")
-                                                .bold()
-                                            Text(" - \(route.steps[idx].instructions)")
-                                        }
-                                    }
-                                }
-                                .listStyle(.plain)
-                                .navigationTitle("Steps")
-                                .navigationBarTitleDisplayMode(.inline)
-                            }
-                        }
-                    }
-                }
-            }
             VStack(alignment: .trailing) {
                 if !searchPlacemarks.isEmpty {
                     Button {
@@ -289,33 +231,6 @@ private extension MapView {
                 cameraPosition = .region(userRegion)
             }
         }
-    }
-
-    func fetchRoute() async {
-        if let userLocation = locationManager.userLocation, let selectedPlacemark {
-            let request = MKDirections.Request()
-            let sourcePlacemark = MKPlacemark(coordinate: userLocation.coordinate)
-            let routeSource = MKMapItem(placemark: sourcePlacemark)
-            let destinationPlacemark = MKPlacemark(coordinate: selectedPlacemark.coordinate)
-            routeDestination = MKMapItem(placemark: destinationPlacemark)
-            routeDestination?.name = selectedPlacemark.name
-            request.source = routeSource
-            request.tollPreference = .avoid
-            request.highwayPreference = .avoid
-            request.destination = routeDestination
-            let directions = MKDirections(request: request)
-            let result = try? await directions.calculate()
-            route = result?.routes.first
-            travelInterval = route?.expectedTravelTime
-        }
-    }
-    
-    func removeRoute() {
-        routeDisplaying = false
-        showRoute = false
-        route = nil
-        selectedPlacemark = nil
-        updateCameraPosition()
     }
 }
 
