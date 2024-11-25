@@ -97,8 +97,10 @@ struct RouteCreatorView: View {
                         if designRoute {
                             showDetail = (circularRoute ? routePlacemarks.count + 1 : routePlacemarks.count) == routeSegments.count
                             if showDetail {
-                                if let rect = routeSegments.first?.polyline.boundingMapRect {
-                                    cameraPosition = .rect(rect)
+                                if let startingPlacemarkCoordinates = startingPlacemark?.coordinate {
+                                    let mapPoint = MKMapPoint(startingPlacemarkCoordinates)
+                                    let mapRect = MKMapRect(origin: mapPoint, size: MKMapSize(width: 1000, height: 1000))
+                                    cameraPosition = .rect(mapRect)
                                 }
                             }
                         }
@@ -107,8 +109,10 @@ struct RouteCreatorView: View {
                         if showRoute {
                             withAnimation {
                                 routeDisplaying = true
-                                if let rect = routeSegments.first?.polyline.boundingMapRect {
-                                    cameraPosition = .rect(rect)
+                                if let startingPlacemarkCoordinates = startingPlacemark?.coordinate {
+                                    let mapPoint = MKMapPoint(startingPlacemarkCoordinates)
+                                    let mapRect = MKMapRect(origin: mapPoint, size: MKMapSize(width: 1000, height: 1000))
+                                    cameraPosition = .rect(mapRect)
                                 }
                             }
                         }
@@ -233,75 +237,63 @@ private extension RouteCreatorView {
     @ViewBuilder var bottomSafeAreaView: some View {
         HStack {
             VStack {
-                if routeDisplaying {
-                    VStack {
-                        HStack {
-                            Button("Clear Route", systemImage: "xmark.circle") {
-                                removeRoute()
-                            }
-                            Button("Show Steps", systemImage: "location.north") {
-                                showSteps.toggle()
-                            }
+                if fetchingRoute {
+                    ProgressView()
+                        .progressViewStyle(CircularProgressViewStyle())
+                } else if routeDisplaying {
+                    HStack(spacing: 20) {
+                        Button("Create the route", systemImage: "plus.circle") {
+                            designRoute = true
                         }
-                        Button("Go to route details", systemImage: "hand.point.up.braille") {
-                            Task { @MainActor in
-                                fetchingRoute = true
-                                if (circularRoute ? routePlacemarks.count + 1 : routePlacemarks.count) != routeSegments.count {
-                                    await fetchRoute()
-                                }
-                                designRoute.toggle()
-                                fetchingRoute = false
-                            }
+                        Button("Discard the route", systemImage: "minus.circle") {
+                            MapManager.removeSearchResults(modelContext)
+                            routeSegments = []
+                            startingPlacemark = nil
+                            routePlacemarks = []
+                            routeDisplaying = false
                         }
                     }
                     .buttonStyle(.borderedProminent)
                     .fixedSize(horizontal: true, vertical: false)
                 } else {
-                    HStack(spacing: 20) {
-                        if fetchingRoute {
-                            ProgressView()
-                                .progressViewStyle(CircularProgressViewStyle())
-                                .padding()
-                        } else {
-                            Button("\(!showRoute ? "Show" : "Hide") the route", systemImage: "hand.point.up.braille") {
-                                Task { @MainActor in
-                                    fetchingRoute = true
-                                    if (circularRoute ? routePlacemarks.count + 1 : routePlacemarks.count) != routeSegments.count {
-                                        await fetchRoute()
-                                    }
-                                    showRoute.toggle()
-                                    fetchingRoute = false
-                                }
+                    Button("Calculate the route", systemImage: "paperplane.circle") {
+                        Task { @MainActor in
+                            fetchingRoute = true
+                            if (circularRoute ? routePlacemarks.count + 1 : routePlacemarks.count) != routeSegments.count {
+                                await fetchRoute()
                             }
-                            .disabled(routePlacemarks.isEmpty)
-                            .buttonStyle(.borderedProminent)
-                            .fixedSize(horizontal: true, vertical: false)
+                            showRoute.toggle()
+                            fetchingRoute = false
                         }
                     }
-                }
-            }
-
-            VStack {
-                if !searchPlacemarks.isEmpty {
-                    Button {
-                        MapManager.removeSearchResults(modelContext)
-                        routeSegments = []
-                        startingPlacemark = nil
-                        routePlacemarks = []
-                    } label: {
-                        Image(systemName: "mappin.slash")
-                    }
+                    .disabled(routePlacemarks.isEmpty)
                     .buttonStyle(.borderedProminent)
-                    .tint(.red)
+                    .fixedSize(horizontal: true, vertical: false)
                 }
-                MapUserLocationButton(scope: mapScope)
-                MapCompass(scope: mapScope)
-                    .mapControlVisibility(.visible)
-                MapPitchToggle(scope: mapScope)
-                    .mapControlVisibility(.visible)
             }
-            .padding()
-            .buttonBorderShape(.circle)
+            Spacer()
+            if !routeDisplaying, !fetchingRoute {
+                VStack {
+                    if !searchPlacemarks.isEmpty {
+                        Button {
+                            MapManager.removeSearchResults(modelContext)
+                            routeSegments = []
+                            startingPlacemark = nil
+                            routePlacemarks = []
+                        } label: {
+                            Image(systemName: "mappin.slash")
+                        }
+                        .buttonStyle(.borderedProminent)
+                        .tint(.red)
+                    }
+                    MapUserLocationButton(scope: mapScope)
+                    MapCompass(scope: mapScope)
+                        .mapControlVisibility(.visible)
+                    MapPitchToggle(scope: mapScope)
+                        .mapControlVisibility(.visible)
+                }
+                .buttonBorderShape(.circle)
+            }
         }
         .padding(20)
     }
