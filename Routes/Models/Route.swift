@@ -21,7 +21,6 @@ class Route {
     var startingPlacemark: Placemark?
     var circularRoute: Bool = true
     var routeIntermediatePlacemarks: [RouteIntermediatePlacemark] = []
-    @Relationship(deleteRule: .cascade)
     var pointOfInterestPlacemarks: [PointOfInterestPlacemark] = []
 
     init(name: String,

@@ -12,12 +12,13 @@ import SwiftData
 struct MapView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(LocationManager.self) var locationManager
-    @Query private var listPlacemarks: [Placemark]
+    @Query(filter: #Predicate<Route> { $0.startingPlacemark != nil }) private var listRoutes: [Route]
     @Query private var listPoisPlacemarks: [PointOfInterestPlacemark]
     @Query(filter: #Predicate<Placemark> {$0.route == nil}) private var searchPlacemarks: [Placemark]
 
     @State private var visibleRegion: MKCoordinateRegion?
-    @State private var selectedPlacemark: Placemark?
+    @State private var selectedRoute: Route?
+    @State private var isRouteSelected = false
     @State private var selectedPlacemarkId: UUID?
     @State var cameraPosition: MapCameraPosition = .userLocation(fallback: .automatic)
     @State var routes = [Route]()
@@ -40,25 +41,11 @@ struct MapView: View {
     @State private var poiSelectedIndex = 0
     private var pointsOfInterest: [PointOfInterestModel] = [.cafe, .gasStation, .hotel, .mechanic]
 
-    // Bindings
-    var isPlacemarkSelected: Binding<Bool> {
-        Binding(
-            get: {
-                selectedPlacemark != nil
-            },
-            set: { newValue in
-                if !newValue, showPoisPicker {
-                    selectedPlacemark = nil
-                }
-            }
-        )
-    }
-
     var body: some View {
         VStack {
             MapReader { proxy in
                 mapView
-                    .alert("What do you want?", isPresented: isPlacemarkSelected) {
+                    .alert("What do you want?", isPresented: $isRouteSelected) {
                         Button("Show track") {
                             showTrack = true
                         }
@@ -67,11 +54,11 @@ struct MapView: View {
                             showPoisPicker = true
                         }
                         Button("Dismiss", role: .cancel) {
-                            selectedPlacemark = nil
+                            selectedRoute = nil
                         }
                     }
                     .sheet(isPresented: $showTrack) {
-                        RouteTrackView(selectedPlacemark: selectedPlacemark, cameraPosition: $cameraPosition)
+                        RouteTrackView(selectedRoute: selectedRoute, cameraPosition: $cameraPosition)
                             .presentationDetents([.large])
                     }
                     .onMapCameraChange { context in
@@ -83,21 +70,25 @@ struct MapView: View {
                         updateCameraPosition()
                     }
                     .onDisappear {
-                        selectedPlacemark = nil
+                        selectedRoute = nil
                         selectedPointOfInterest = nil
                     }
                     .mapStyle(mapStyleConfig.mapStyle)
                     .task(id: selectedPlacemarkId) {
-                        if selectedPlacemark == nil {
-                            selectedPlacemark = listPlacemarks.first { placemark in
-                                placemark.uuid == selectedPlacemarkId
+                        if selectedRoute == nil {
+                            selectedRoute = listRoutes.first { route in
+                                route.startingPlacemark?.uuid == selectedPlacemarkId
+                            }
+                            if selectedRoute != nil {
+                                isRouteSelected = true
                             }
                         }
                         selectedPointOfInterest = listPoisPlacemarks.first { placemark in
                             placemark.uuid == selectedPlacemarkId
                         }
-                        if let selectedPointOfInterest {
-                            selectedPlacemark?.route?.pointOfInterestPlacemarks.append(selectedPointOfInterest)
+                        if let poi = selectedPointOfInterest {
+                            selectedRoute?.pointOfInterestPlacemarks.append(poi)
+                            selectedPointOfInterest = nil
                         }
                     }
                     .safeAreaInset(edge: .bottom) {
@@ -116,17 +107,14 @@ private extension MapView {
     @ViewBuilder var mapView: some View {
         Map(position: $cameraPosition, selection: $selectedPlacemarkId) {
             UserAnnotation()
-            ForEach(listPlacemarks, id: \.self) { placemark in
-                Group {
-                    if placemark.route != nil {
-                        Marker(coordinate: placemark.coordinate) {
-                            Label(placemark.name, systemImage: "star")
-                        }
-                        .tint(.yellow)
-                    } else {
-                        Marker(placemark.name, coordinate: placemark.coordinate)
+            ForEach(listRoutes, id: \.self) { route in
+                if let placemark = route.startingPlacemark {
+                    Marker(coordinate:  placemark.coordinate) {
+                        Label(placemark.name, systemImage: "star")
                     }
-                }.tag(placemark.uuid)
+                    .tint(.yellow)
+                    .tag(placemark.uuid)
+                }
             }
             ForEach(listPoisPlacemarks, id: \.self) { placemark in
                 Marker(coordinate: placemark.coordinate) {

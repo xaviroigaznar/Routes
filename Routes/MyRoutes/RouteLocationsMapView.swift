@@ -97,8 +97,8 @@ struct RouteLocationsMapView: View {
                 MapManager.removeSearchResults(modelContext)
             }
         }) { selectedPlacemark in
-            RouteTrackView(selectedPlacemark: selectedPlacemark, cameraPosition: $cameraPosition)
-                .presentationDetents([.large])
+//            RouteTrackView(selectedPlacemark: selectedPlacemark, cameraPosition: $cameraPosition)
+//                .presentationDetents([.large])
         }
         .safeAreaInset(edge: .bottom) {
             VStack {

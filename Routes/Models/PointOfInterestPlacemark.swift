@@ -15,6 +15,7 @@ class PointOfInterestPlacemark {
     var address: String
     var latitude: Double
     var longitude: Double
+    @Relationship(deleteRule: .cascade)
     var route: Route?
 
     init(name: String, address: String, latitude: Double, longitude: Double) {

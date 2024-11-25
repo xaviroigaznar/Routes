@@ -11,23 +11,19 @@ import SwiftData
 
 struct RouteTrackView: View {
     @Environment(\.dismiss) private var dismiss
-    var selectedPlacemark: Placemark?
+    var selectedRoute: Route?
     @Binding var cameraPosition: MapCameraPosition
 
     @State private var routeSegments: [MKRoute] = []
     @State private var fetchingRoute = true
 
-    var route: Route? {
-        selectedPlacemark?.route
-    }
-
     var body: some View {
         VStack {
             VStack(alignment: .leading) {
-                Text(selectedPlacemark?.name ?? "")
+                Text(selectedRoute?.startingPlacemark?.name ?? "")
                     .font(.title2)
                     .fontWeight(.semibold)
-                Text(selectedPlacemark?.address ?? "")
+                Text(selectedRoute?.startingPlacemark?.address ?? "")
                     .font(.footnote)
                     .foregroundStyle(.secondary)
                     .lineLimit(2)
@@ -51,7 +47,7 @@ struct RouteTrackView: View {
                     .padding()
             }
             Button("Open in maps", systemImage: "map") {
-                if let selectedPlacemark {
+                if let selectedPlacemark = selectedRoute?.startingPlacemark {
                     let placemark = MKPlacemark(coordinate: selectedPlacemark.coordinate)
                     let mapItem = MKMapItem(placemark: placemark)
                     mapItem.name = selectedPlacemark.name
@@ -73,7 +69,7 @@ struct RouteTrackView: View {
     }
 
     func fetchRoute() async {
-        guard let route else { return }
+        guard let route = selectedRoute else { return }
         if route.routeIntermediatePlacemarks.count == 1,
            let startingPlacemark = route.startingPlacemark,
            let finishingPlacemark = route.routeIntermediatePlacemarks.first {
@@ -153,21 +149,20 @@ struct RouteTrackView: View {
 #Preview("Route Tab") {
     let container = Route.preview
     let fetchDescriptor = FetchDescriptor<Route>()
-    let route = try! container.mainContext.fetch(fetchDescriptor)[0]
-    let selectedPlacemark = route.startingPlacemark
+    let selectedRoute = try! container.mainContext.fetch(fetchDescriptor)[0]
     return RouteTrackView(
-        selectedPlacemark: selectedPlacemark,
+        selectedRoute: selectedRoute,
         cameraPosition: .constant(.automatic)
     )
 }
 
 #Preview("TripMap Tab") {
     let container = Route.preview
-    let fetchDescriptor = FetchDescriptor<Placemark>()
-    let placemarks = try! container.mainContext.fetch(fetchDescriptor)
-    let selectedPlacemark = placemarks[0]
+    let fetchDescriptor = FetchDescriptor<Route>()
+    let routes = try! container.mainContext.fetch(fetchDescriptor)
+    let selectedRoute = routes[0]
     return RouteTrackView(
-        selectedPlacemark: selectedPlacemark,
+        selectedRoute: selectedRoute,
         cameraPosition: .constant(.automatic)
     )
 }
