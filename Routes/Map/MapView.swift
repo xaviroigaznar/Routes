@@ -13,7 +13,6 @@ struct MapView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(LocationManager.self) var locationManager
     @Query(filter: #Predicate<Route> { $0.startingPlacemark != nil }) private var listRoutes: [Route]
-    @Query private var listPoisPlacemarks: [PointOfInterestPlacemark]
     @Query(filter: #Predicate<Placemark> {$0.route == nil}) private var searchPlacemarks: [Placemark]
 
     @State private var visibleRegion: MKCoordinateRegion?
@@ -35,12 +34,6 @@ struct MapView: View {
     // Track
     @State private var showTrack = false
 
-    // Points of Interest
-    @State private var showPoisPicker = false
-    @State private var selectedPointOfInterest: PointOfInterestPlacemark?
-    @State private var poiSelectedIndex = 0
-    private var pointsOfInterest: [PointOfInterestModel] = [.cafe, .gasStation, .hotel, .mechanic]
-
     var body: some View {
         VStack {
             MapReader { proxy in
@@ -48,10 +41,6 @@ struct MapView: View {
                     .alert("What do you want?", isPresented: $isRouteSelected) {
                         Button("Show track") {
                             showTrack = true
-                        }
-                        Button("Search Points of Interest during the route") {
-                            MapManager.removePointsOfInterestResults(modelContext)
-                            showPoisPicker = true
                         }
                         Button("Dismiss", role: .cancel) {
                             selectedRoute = nil
@@ -65,13 +54,11 @@ struct MapView: View {
                         visibleRegion = context.region
                     }
                     .onAppear {
-                        MapManager.removePointsOfInterestResults(modelContext)
                         MapManager.removeSearchResults(modelContext)
                         updateCameraPosition()
                     }
                     .onDisappear {
                         selectedRoute = nil
-                        selectedPointOfInterest = nil
                     }
                     .mapStyle(mapStyleConfig.mapStyle)
                     .task(id: selectedPlacemarkId) {
@@ -83,20 +70,10 @@ struct MapView: View {
                                 isRouteSelected = true
                             }
                         }
-                        selectedPointOfInterest = listPoisPlacemarks.first { placemark in
-                            placemark.uuid == selectedPlacemarkId
-                        }
-                        if let poi = selectedPointOfInterest {
-                            selectedRoute?.pointOfInterestPlacemarks.append(poi)
-                            selectedPointOfInterest = nil
-                        }
                     }
                     .safeAreaInset(edge: .bottom) {
                         safeAreaInsetView
                     }
-            }
-            if showPoisPicker {
-                poisPickerView
             }
         }
     }
@@ -116,57 +93,7 @@ private extension MapView {
                     .tag(placemark.uuid)
                 }
             }
-            ForEach(listPoisPlacemarks, id: \.self) { placemark in
-                Marker(coordinate: placemark.coordinate) {
-                    if pointsOfInterest[poiSelectedIndex].name == PointOfInterestModel.cafe.name {
-                        Label(placemark.name, systemImage: "cup.and.saucer.fill")
-                    } else if pointsOfInterest[poiSelectedIndex].name == PointOfInterestModel.gasStation.name {
-                        Label(placemark.name, systemImage: "flame")
-                    } else if pointsOfInterest[poiSelectedIndex].name == PointOfInterestModel.hotel.name {
-                        Label(placemark.name, systemImage: "house")
-                    } else if pointsOfInterest[poiSelectedIndex].name == PointOfInterestModel.mechanic.name {
-                        Label(placemark.name, systemImage: "figure.outdoor.cycle")
-                    }
-                }
-                .tint(.green)
-                .tag(placemark.uuid)
-            }
         }
-    }
-
-    @ViewBuilder var poisPickerView: some View {
-        NavigationView {
-            Picker("Select a Point of Interest", selection: $poiSelectedIndex) {
-                ForEach(0..<pointsOfInterest.count, id: \.self) { index in
-                    HStack {
-                        Text(pointsOfInterest[index].name)
-                            .font(.headline)
-                    }
-                }
-            }
-            .pickerStyle(WheelPickerStyle())
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") {
-                        showPoisPicker = false
-                    }
-                }
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Done") {
-                        showPoisPicker = false
-                        Task {
-                            await MapManager.searchPointsOfInterest(
-                                modelContext,
-                                searchText: pointsOfInterest[poiSelectedIndex].name,
-                                visibleRegion: visibleRegion
-                            )
-                            poiSelectedIndex = 0
-                        }
-                    }
-                }
-            }
-        }
-        .frame(height: 200)
     }
 
     @ViewBuilder var safeAreaInsetView: some View {
