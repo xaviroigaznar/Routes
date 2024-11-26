@@ -48,30 +48,34 @@ struct RouteCreatorView: View {
     var body: some View {
         ZStack(alignment: .bottom) {
             MapReader { proxy in
-                map
-                    .onTapGesture { position in
-                        guard !showPoisPicker else {
-                            showPoisPicker.toggle()
-                            return
-                        }
-                        if let coordinate = proxy.convert(position, from: .local) {
-                            if startingPlacemark == nil  {
-                                let placemark = Placemark(name: "Starting point",
-                                                          address: "",
-                                                          latitude: coordinate.latitude,
-                                                          longitude: coordinate.longitude)
-                                startingPlacemark = placemark
-                                modelContext.insert(placemark)
-                            } else {
-                                let placemark = RouteIntermediatePlacemark(name: "Route point \(routePlacemarks.count + 1)",
-                                                                           address: "",
-                                                                           latitude: coordinate.latitude,
-                                                                           longitude: coordinate.longitude)
-                                routePlacemarks.append(placemark)
-                                modelContext.insert(placemark)
+                ZStack(alignment: .topTrailing) {
+                    map
+                        .onTapGesture { position in
+                            guard !showPoisPicker, !routeDisplaying else {
+                                showPoisPicker.toggle()
+                                return
+                            }
+                            if let coordinate = proxy.convert(position, from: .local) {
+                                if startingPlacemark == nil  {
+                                    let placemark = Placemark(name: "Starting point",
+                                                              address: "",
+                                                              latitude: coordinate.latitude,
+                                                              longitude: coordinate.longitude)
+                                    startingPlacemark = placemark
+                                    modelContext.insert(placemark)
+                                } else {
+                                    let placemark = RouteIntermediatePlacemark(name: "Route point \(routePlacemarks.count + 1)",
+                                                                               address: "",
+                                                                               latitude: coordinate.latitude,
+                                                                               longitude: coordinate.longitude)
+                                    routePlacemarks.append(placemark)
+                                    modelContext.insert(placemark)
+                                }
                             }
                         }
-                    }
+                    topSafeAreaView
+                        .padding(20)
+                }
                     .onMapCameraChange{ context in
                         visibleRegion = context.region
                     }
@@ -98,9 +102,9 @@ struct RouteCreatorView: View {
                             showDetail = (circularRoute ? routePlacemarks.count + 1 : routePlacemarks.count) == routeSegments.count
                             if showDetail {
                                 if let startingPlacemarkCoordinates = startingPlacemark?.coordinate {
-                                    let mapPoint = MKMapPoint(startingPlacemarkCoordinates)
-                                    let mapRect = MKMapRect(origin: mapPoint, size: MKMapSize(width: 1000, height: 1000))
-                                    cameraPosition = .rect(mapRect)
+                                    cameraPosition = .region(MKCoordinateRegion(center: startingPlacemarkCoordinates,
+                                                                                span: MKCoordinateSpan(latitudeDelta: 0.1,
+                                                                                                       longitudeDelta: 0.1)))
                                 }
                             }
                         }
@@ -110,21 +114,16 @@ struct RouteCreatorView: View {
                             withAnimation {
                                 routeDisplaying = true
                                 if let startingPlacemarkCoordinates = startingPlacemark?.coordinate {
-                                    let mapPoint = MKMapPoint(startingPlacemarkCoordinates)
-                                    let mapRect = MKMapRect(origin: mapPoint, size: MKMapSize(width: 1000, height: 1000))
-                                    cameraPosition = .rect(mapRect)
+                                    cameraPosition = .region(MKCoordinateRegion(center: startingPlacemarkCoordinates,
+                                                                                span: MKCoordinateSpan(latitudeDelta: 0.1,
+                                                                                                       longitudeDelta: 0.1)))
                                 }
                             }
                         }
                     }
-                    .safeAreaInset(edge: .top) {
-                        topSafeAreaView
-                    }
-                    .safeAreaInset(edge: .bottom) {
-                        bottomSafeAreaView
-                            .padding(20)
-                    }
             }
+            bottomSafeAreaView
+                .padding(20)
             if showPoisPicker {
                 poisPickerView
             }
@@ -136,25 +135,27 @@ struct RouteCreatorView: View {
 // MARK: - Private views
 private extension RouteCreatorView {
     @ViewBuilder var topSafeAreaView: some View {
-        if !searchPlacemarks.isEmpty {
-            HStack {
+        if routeDisplaying {
+            VStack(alignment: .trailing) {
                 Button {
                     showPoisPicker.toggle()
                 } label: {
                     Image(systemName: "mappin")
                 }
-                .buttonStyle(.borderedProminent)
-                .tint(Color.appSecondary)
-                .buttonBorderShape(.circle)
-                VStack(alignment: .trailing) {
-                    Text("Circular route")
-                        .foregroundStyle(Color("AppSecondary"), Color("AccentColor"))
-                        .font(.headline)
-                    Toggle("", isOn: $circularRoute)
-                }
-                .padding()
             }
-            .padding(.horizontal, 20)
+            .buttonStyle(.borderedProminent)
+            .tint(Color.appSecondary)
+            .buttonBorderShape(.circle)
+            .padding(30)
+        }
+        if !searchPlacemarks.isEmpty, !routeDisplaying {
+            VStack(alignment: .trailing) {
+                Text("Circular route")
+                    .foregroundStyle(Color("AppSecondary"), Color("AccentColor"))
+                    .font(.headline)
+                Toggle("", isOn: $circularRoute)
+            }
+            .padding(.trailing, 20)
         }
     }
 
