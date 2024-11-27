@@ -43,6 +43,7 @@ struct RouteCreatorView: View {
     @State private var showPoisPicker = false
     @State private var selectedPointOfInterest: PointOfInterestPlacemark?
     @State private var poiSelectedIndex = 0
+    @State private var showPoiSelectedAlert = false
     private var pointsOfInterest: [PointOfInterestModel] = [.cafe, .gasStation, .hotel, .mechanic]
 
     var body: some View {
@@ -126,30 +127,18 @@ struct RouteCreatorView: View {
                 .padding(20)
             if showPoisPicker {
                 poisPickerView
-                    .alert("Do you want to add it to the route?", isPresented: showPoiSelectedAlert) {
-                        Button("Yes", role: .destructive) {
-                            // Update route
-                            selectedPointOfInterest = nil
-                        }
-                        Button("No", role: .cancel) { 
-                            selectedPointOfInterest = nil
-                        }
-                    }
             }
         }
-    }
-
-    var showPoiSelectedAlert: Binding<Bool> {
-        Binding<Bool> {
-            selectedPointOfInterest != nil
-        } set: { value in
-            if !value {
+        .alert("Do you want to add it to the route?", isPresented: $showPoiSelectedAlert) {
+            Button("Yes") {
+                // Update route
+                selectedPointOfInterest = nil
+            }
+            Button("No", role: .destructive) {
                 selectedPointOfInterest = nil
             }
         }
-
     }
-
 }
 
 // MARK: - Private views
@@ -218,7 +207,7 @@ private extension RouteCreatorView {
                     }
                 }
                 .tint(.green)
-                .tag(placemark.uuid)
+                .tag(placemark)
             }
             if !routeSegments.isEmpty, routeDisplaying {
                 Group {
@@ -228,6 +217,9 @@ private extension RouteCreatorView {
                     }
                 }
             }
+        }
+        .task(id: selectedPointOfInterest) {
+            showPoiSelectedAlert = selectedPointOfInterest != nil
         }
     }
 
