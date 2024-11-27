@@ -177,14 +177,12 @@ private extension RouteDetailView {
         var previousElevation: Double? = nil
 
         try await routeSegments.enumerated().asyncForEach { index, routeSegment in
-            var coordinates = [CLLocationCoordinate2D](repeating: kCLLocationCoordinate2DInvalid, count: routeSegment.polyline.pointCount)
-            routeSegment.polyline.getCoordinates(&coordinates, range: NSRange(location: 0, length: routeSegment.polyline.pointCount))
-            try await coordinates.enumerated().asyncForEach { index, coordinate in
+            try await routeSegment.polyline.coordinates.enumerated().asyncForEach { index, coordinate in
                 if index == 0 {
                     // Insert 0.0 at the start for the initial point
                     kilometers.insert(0.0, at: 0)
                 } else {
-                    totalDistance += calculateKilometers(from: coordinates[index - 1], to: coordinate)
+                    totalDistance += calculateKilometers(from: routeSegment.polyline.coordinates[index - 1], to: coordinate)
 
                     // Append the cumulative distance in kilometers
                     kilometers.append(totalDistance / 1000.0)

@@ -130,12 +130,17 @@ struct RouteCreatorView: View {
             }
         }
         .alert("Do you want to add it to the route?", isPresented: $showPoiSelectedAlert) {
-            Button("Yes") {
-                // Update route
-                selectedPointOfInterest = nil
-            }
             Button("No", role: .destructive) {
                 selectedPointOfInterest = nil
+            }
+            Button("Yes", role: .cancel) {
+                if let selectedPointOfInterest {
+                    Task { @MainActor in
+                        await updateRoute(with: selectedPointOfInterest)
+                    }
+                    MapManager.removePointsOfInterestResults(modelContext)
+                    self.selectedPointOfInterest = nil
+                }
             }
         }
     }
@@ -275,7 +280,7 @@ private extension RouteCreatorView {
                             if (circularRoute ? routePlacemarks.count + 1 : routePlacemarks.count) != routeSegments.count {
                                 await fetchRoute()
                             }
-                            showRoute.toggle()
+                            showRoute = true
                             fetchingRoute = false
                         }
                     }
@@ -421,6 +426,61 @@ private extension RouteCreatorView {
         startingPlacemark = nil
         routePlacemarks = []
         updateCameraPosition()
+    }
+
+    func updateRoute(with placemark: PointOfInterestPlacemark) async {
+        let nearestPlacemarkIndex = findNearestPlacemarkIndex(to: placemark.coordinate)
+
+        var firstNewRouteSegment: MKRoute?
+        var secondNewRouteSegment: MKRoute?
+
+        // Create a directions request
+        let request = MKDirections.Request()
+        request.destination = MKMapItem(placemark: MKPlacemark(coordinate: placemark.coordinate))
+        request.transportType = .automobile
+        if let nearestPlacemarkIndex {
+            request.source = MKMapItem(placemark: MKPlacemark(coordinate: routePlacemarks[nearestPlacemarkIndex].coordinate))
+        } else if let startingPlacemark {
+            request.source = MKMapItem(placemark: MKPlacemark(coordinate: startingPlacemark.coordinate))
+        }
+        let firstDirections = MKDirections(request: request)
+        let firstResult = try? await firstDirections.calculate()
+        if let routeSegment = firstResult?.routes.first {
+            firstNewRouteSegment = routeSegment
+        }
+        if let nearestPlacemarkIndex {
+            request.destination = MKMapItem(placemark: MKPlacemark(coordinate: routePlacemarks[nearestPlacemarkIndex + 1].coordinate))
+        } else if let firstIntermediatePlacemark = routePlacemarks.first {
+            request.destination = MKMapItem(placemark: MKPlacemark(coordinate: firstIntermediatePlacemark.coordinate))
+        }
+        request.source = MKMapItem(placemark: MKPlacemark(coordinate: placemark.coordinate))
+        let secondDirections = MKDirections(request: request)
+        let secondResult = try? await secondDirections.calculate()
+        if let routeSegment = secondResult?.routes.first {
+            secondNewRouteSegment = routeSegment
+        }
+        if let firstNewRouteSegment, let secondNewRouteSegment {
+            routeSegments.remove(at: nearestPlacemarkIndex ?? 0)
+            routeSegments.insert(firstNewRouteSegment, at: nearestPlacemarkIndex ?? 0)
+            routeSegments.insert(secondNewRouteSegment, at: (nearestPlacemarkIndex ?? 0) + 1)
+        }
+    }
+
+    func findNearestPlacemarkIndex(to coordinate: CLLocationCoordinate2D) -> Int? {
+        let selectedLocation = CLLocation(latitude: coordinate.latitude, longitude: coordinate.longitude)
+        var routeLocations: [CLLocation] = []
+        if let startingPlacemark {
+            routeLocations = [CLLocation(latitude: startingPlacemark.coordinate.latitude, longitude: startingPlacemark.coordinate.longitude)]
+        }
+        routeLocations.append(contentsOf: routePlacemarks.map { CLLocation(latitude: $0.coordinate.latitude, longitude: $0.coordinate.longitude) })
+
+        // Calculate distances and find the nearest placemark
+        let distances = routeLocations.map { selectedLocation.distance(from: $0) }
+        if let minIndex = distances.firstIndex(of: distances.min() ?? 0) {
+            return minIndex == 0 ? nil : minIndex - 1
+        }
+
+        return nil
     }
 }
 
