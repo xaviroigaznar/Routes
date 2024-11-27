@@ -52,7 +52,7 @@ struct RouteCreatorView: View {
                     map
                         .onTapGesture { position in
                             guard !showPoisPicker, !routeDisplaying else {
-                                showPoisPicker.toggle()
+                                showPoisPicker = false
                                 return
                             }
                             if let coordinate = proxy.convert(position, from: .local) {
@@ -126,8 +126,28 @@ struct RouteCreatorView: View {
                 .padding(20)
             if showPoisPicker {
                 poisPickerView
+                    .alert("Do you want to add it to the route?", isPresented: showPoiSelectedAlert) {
+                        Button("Yes", role: .destructive) {
+                            // Update route
+                            selectedPointOfInterest = nil
+                        }
+                        Button("No", role: .cancel) { 
+                            selectedPointOfInterest = nil
+                        }
+                    }
             }
         }
+    }
+
+    var showPoiSelectedAlert: Binding<Bool> {
+        Binding<Bool> {
+            selectedPointOfInterest != nil
+        } set: { value in
+            if !value {
+                selectedPointOfInterest = nil
+            }
+        }
+
     }
 
 }
@@ -318,21 +338,29 @@ private extension RouteCreatorView {
     }
 
     func fetchRoute() async {
-        if routePlacemarks.count == 1,
-           let startingPlacemark,
-           let finishingPlacemark = routePlacemarks.first {
-            await fetchFirstRouteSegment(startingPoint: startingPlacemark, to: finishingPlacemark)
+        guard let startingPlacemark, let finishingPlacemark = routePlacemarks.first else {
+            return
+        }
+        // Calculate the first route segment (from starting placemark to the first intermediate placemark).
+        await fetchFirstRouteSegment(startingPoint: startingPlacemark, to: finishingPlacemark)
+
+        // If there is only one intermediate placemark.
+        if routePlacemarks.count == 1 {
+            // If the route is circular, calculate the last route segment (from the first intermediate placemark to the starting placemark).
+            if circularRoute {
+                await fetchCircularRouteLastSegment(from: finishingPlacemark, to: startingPlacemark)
+            } else {
+                // If the route is not circular, it has only one segment so just return.
+                return
+            }
         } else {
-            await routePlacemarks.enumerated().asyncForEach { index, routePoint in
-                if index == 0, let startingPlacemark = routePlacemarks.first {
-                    await fetchIntermediateRouteSegment(from: startingPlacemark, to: routePoint)
-                } else {
-                    await fetchIntermediateRouteSegment(from: routePlacemarks[index - 1], to: routePoint)
-                }
+            // If the route has many intermediate placemarks, calculate the different route segments.
+            for index in 1..<routePlacemarks.count {
+                await fetchIntermediateRouteSegment(from: routePlacemarks[index - 1], to: routePlacemarks[index])
             }
         }
-        if circularRoute, let startingPoint = routePlacemarks.last, let finishPoint = startingPlacemark {
-            await fetchCircularRouteLastSegment(from: startingPoint, to: finishPoint)
+        if circularRoute, let lastIntermediatePlacemark = routePlacemarks.last {
+            await fetchCircularRouteLastSegment(from: lastIntermediatePlacemark, to: startingPlacemark)
         }
     }
 
