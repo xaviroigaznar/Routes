@@ -44,89 +44,23 @@ struct RouteCreatorView: View {
     @State private var selectedPointOfInterest: PointOfInterestPlacemark?
     @State private var poiSelectedIndex = 0
     @State private var showPoiSelectedAlert = false
+    @State private var routePointsOfInterest: [PointOfInterestPlacemark] = []
     private var pointsOfInterest: [PointOfInterestModel] = [.cafe, .gasStation, .hotel, .mechanic]
 
     var body: some View {
-        ZStack(alignment: .bottom) {
-            MapReader { proxy in
-                ZStack(alignment: .topTrailing) {
-                    map
-                        .onTapGesture { position in
-                            guard !showPoisPicker, !routeDisplaying else {
-                                showPoisPicker = false
-                                return
-                            }
-                            if let coordinate = proxy.convert(position, from: .local) {
-                                if startingPlacemark == nil  {
-                                    let placemark = Placemark(name: "Starting point",
-                                                              address: "",
-                                                              latitude: coordinate.latitude,
-                                                              longitude: coordinate.longitude)
-                                    startingPlacemark = placemark
-                                    modelContext.insert(placemark)
-                                } else {
-                                    let placemark = RouteIntermediatePlacemark(name: "Route point \(routePlacemarks.count + 1)",
-                                                                               address: "",
-                                                                               latitude: coordinate.latitude,
-                                                                               longitude: coordinate.longitude)
-                                    routePlacemarks.append(placemark)
-                                    modelContext.insert(placemark)
-                                }
-                            }
-                        }
-                    topSafeAreaView
-                        .padding(20)
+        ZStack {
+            ZStack(alignment: .bottom) {
+                mapReader
+                bottomSafeAreaView
+                    .padding(20)
+                if showPoisPicker {
+                    poisPickerView
                 }
-                    .onMapCameraChange{ context in
-                        visibleRegion = context.region
-                    }
-                    .onAppear {
-                        MapManager.removeSearchResults(modelContext)
-                        MapManager.removePointsOfInterestResults(modelContext)
-                        updateCameraPosition()
-                    }
-                    .mapStyle(mapStyleConfig.mapStyle)
-                    .sheet(isPresented: $showDetail) {
-                        RouteDetailView(
-                            route: $route,
-                            startPlacemark: startingPlacemark,
-                            routePlacemarks: routePlacemarks,
-                            routeSegments: routeSegments,
-                            showRoute: $showRoute,
-                            circularRoute: $circularRoute,
-                            cameraPosition: $cameraPosition
-                        )
-                        .presentationDetents([.large])
-                    }
-                    .onChange(of: designRoute) {
-                        if designRoute {
-                            showDetail = (circularRoute ? routePlacemarks.count + 1 : routePlacemarks.count) == routeSegments.count
-                            if showDetail {
-                                if let startingPlacemarkCoordinates = startingPlacemark?.coordinate {
-                                    cameraPosition = .region(MKCoordinateRegion(center: startingPlacemarkCoordinates,
-                                                                                span: MKCoordinateSpan(latitudeDelta: 0.1,
-                                                                                                       longitudeDelta: 0.1)))
-                                }
-                            }
-                        }
-                    }
-                    .onChange(of: showRoute) {
-                        if showRoute {
-                            withAnimation {
-                                routeDisplaying = true
-                                if let startingPlacemarkCoordinates = startingPlacemark?.coordinate {
-                                    cameraPosition = .region(MKCoordinateRegion(center: startingPlacemarkCoordinates,
-                                                                                span: MKCoordinateSpan(latitudeDelta: 0.1,
-                                                                                                       longitudeDelta: 0.1)))
-                                }
-                            }
-                        }
-                    }
             }
-            bottomSafeAreaView
-                .padding(20)
-            if showPoisPicker {
-                poisPickerView
+            .opacity(fetchingRoute ? 0.3 : 1)
+            if fetchingRoute {
+                ProgressView()
+                    .progressViewStyle(CircularProgressViewStyle())
             }
         }
         .alert("Do you want to add it to the route?", isPresented: $showPoiSelectedAlert) {
@@ -135,10 +69,13 @@ struct RouteCreatorView: View {
             }
             Button("Yes", role: .cancel) {
                 if let selectedPointOfInterest {
+                    fetchingRoute = true
                     Task { @MainActor in
                         await updateRoute(with: selectedPointOfInterest)
+                        routePointsOfInterest.append(selectedPointOfInterest)
+                        MapManager.removePointsOfInterestResults(modelContext)
+                        fetchingRoute = false
                     }
-                    MapManager.removePointsOfInterestResults(modelContext)
                     self.selectedPointOfInterest = nil
                 }
             }
@@ -170,6 +107,84 @@ private extension RouteCreatorView {
                 Toggle("", isOn: $circularRoute)
             }
             .padding(.trailing, 20)
+        }
+    }
+
+    @ViewBuilder var mapReader: some View {
+        MapReader { proxy in
+            ZStack(alignment: .topTrailing) {
+                map
+                    .onTapGesture { position in
+                        guard !showPoisPicker, !routeDisplaying else {
+                            showPoisPicker = false
+                            return
+                        }
+                        if let coordinate = proxy.convert(position, from: .local) {
+                            if startingPlacemark == nil  {
+                                let placemark = Placemark(name: "Starting point",
+                                                          address: "",
+                                                          latitude: coordinate.latitude,
+                                                          longitude: coordinate.longitude)
+                                startingPlacemark = placemark
+                                modelContext.insert(placemark)
+                            } else {
+                                let placemark = RouteIntermediatePlacemark(name: "Route point \(routePlacemarks.count + 1)",
+                                                                           address: "",
+                                                                           latitude: coordinate.latitude,
+                                                                           longitude: coordinate.longitude)
+                                routePlacemarks.append(placemark)
+                                modelContext.insert(placemark)
+                            }
+                        }
+                    }
+                topSafeAreaView
+                    .padding(20)
+            }
+                .onMapCameraChange{ context in
+                    visibleRegion = context.region
+                }
+                .onAppear {
+                    MapManager.removeSearchResults(modelContext)
+                    MapManager.removePointsOfInterestResults(modelContext)
+                    updateCameraPosition()
+                }
+                .mapStyle(mapStyleConfig.mapStyle)
+                .sheet(isPresented: $showDetail) {
+                    RouteDetailView(
+                        route: $route,
+                        startPlacemark: startingPlacemark,
+                        routePlacemarks: routePlacemarks,
+                        routeSegments: routeSegments,
+                        showRoute: $showRoute,
+                        circularRoute: $circularRoute,
+                        cameraPosition: $cameraPosition
+                    )
+                    .presentationDetents([.large])
+                }
+                .onChange(of: designRoute) {
+                    if designRoute {
+                        showDetail = (circularRoute ? routePlacemarks.count + 1 : routePlacemarks.count) == routeSegments.count
+                        if showDetail {
+                            if let startingPlacemarkCoordinates = startingPlacemark?.coordinate {
+                                cameraPosition = .region(MKCoordinateRegion(center: startingPlacemarkCoordinates,
+                                                                            span: MKCoordinateSpan(latitudeDelta: 0.1,
+                                                                                                   longitudeDelta: 0.1)))
+                            }
+                        }
+                    }
+                }
+                .onChange(of: showRoute) {
+                    if showRoute {
+                        withAnimation {
+                            routeDisplaying = true
+                            if let startingPlacemarkCoordinates = startingPlacemark?.coordinate {
+                                cameraPosition = .region(MKCoordinateRegion(center: startingPlacemarkCoordinates,
+                                                                            span: MKCoordinateSpan(latitudeDelta: 0.1,
+                                                                                                   longitudeDelta: 0.1)))
+                            }
+                        }
+                    }
+                }
         }
     }
 
@@ -214,16 +229,34 @@ private extension RouteCreatorView {
                 .tint(.green)
                 .tag(placemark)
             }
+            ForEach(routePointsOfInterest, id: \.self) { placemark in
+                Marker(coordinate: placemark.coordinate) {
+                    if placemark.type == PointOfInterestModel.cafe.name {
+                        Label(placemark.name, systemImage: "cup.and.saucer.fill")
+                    } else if placemark.type == PointOfInterestModel.gasStation.name {
+                        Label(placemark.name, systemImage: "flame")
+                    } else if placemark.type == PointOfInterestModel.hotel.name {
+                        Label(placemark.name, systemImage: "house")
+                    } else if placemark.type == PointOfInterestModel.mechanic.name {
+                        Label(placemark.name, systemImage: "figure.outdoor.cycle")
+                    }
+                }
+                .tint(.green)
+                .tag(placemark)
+            }
             if !routeSegments.isEmpty, routeDisplaying {
                 Group {
                     ForEach(routeSegments, id: \.self) { routeSegment in
                         MapPolyline(routeSegment.polyline)
-                            .stroke(.blue, lineWidth: 6)
+                            .stroke(Color.appSecondary, lineWidth: 4)
                     }
                 }
             }
         }
         .task(id: selectedPointOfInterest) {
+            guard !routePointsOfInterest.contains(where: { $0 == selectedPointOfInterest }) else {
+                return
+            }
             showPoiSelectedAlert = selectedPointOfInterest != nil
         }
     }
@@ -255,10 +288,7 @@ private extension RouteCreatorView {
     @ViewBuilder var bottomSafeAreaView: some View {
         HStack {
             VStack {
-                if fetchingRoute {
-                    ProgressView()
-                        .progressViewStyle(CircularProgressViewStyle())
-                } else if routeDisplaying {
+                if !fetchingRoute, routeDisplaying {
                     HStack(spacing: 20) {
                         Button("Create the route", systemImage: "plus.circle") {
                             designRoute = true
@@ -273,7 +303,7 @@ private extension RouteCreatorView {
                     }
                     .buttonStyle(.borderedProminent)
                     .fixedSize(horizontal: true, vertical: false)
-                } else {
+                } else if !fetchingRoute {
                     Button("Calculate the route", systemImage: "paperplane.circle") {
                         Task { @MainActor in
                             fetchingRoute = true

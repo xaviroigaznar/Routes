@@ -43,6 +43,7 @@ enum MapManager {
         let results = searchItems?.mapItems ?? []
         results.forEach {
             let placemark = PointOfInterestPlacemark(
+                type: searchText,
                 name: $0.placemark.name ?? "",
                 address: $0.placemark.title ?? "",
                 latitude: $0.placemark.coordinate.latitude,

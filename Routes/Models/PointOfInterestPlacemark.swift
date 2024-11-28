@@ -11,6 +11,7 @@ import MapKit
 @Model
 class PointOfInterestPlacemark {
     let uuid = UUID()
+    var type: String
     var name: String
     var address: String
     var latitude: Double
@@ -18,7 +19,8 @@ class PointOfInterestPlacemark {
     @Relationship(deleteRule: .cascade)
     var route: Route?
 
-    init(name: String, address: String, latitude: Double, longitude: Double) {
+    init(type: String, name: String, address: String, latitude: Double, longitude: Double) {
+        self.type = type
         self.name = name
         self.address = address
         self.latitude = latitude
