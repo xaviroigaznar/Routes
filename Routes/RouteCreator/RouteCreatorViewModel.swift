@@ -15,6 +15,7 @@ class RouteCreatorViewModel: ObservableObject {
 
     private var startingPlacemark: Placemark?
     private var routePlacemarks: [RouteIntermediatePlacemark] = []
+    private var routePointsOfInterest: [PointOfInterestPlacemark] = []
 
     func setStartingPlacemark(_ startingPlacemark: Placemark?) {
         self.startingPlacemark = startingPlacemark
@@ -22,6 +23,10 @@ class RouteCreatorViewModel: ObservableObject {
 
     func setRoutePlacemarks(_ routePlacemarks: [RouteIntermediatePlacemark]) {
         self.routePlacemarks = routePlacemarks
+    }
+
+    func setPointOfInterestPlacemarks(_ poiPlacemarks: [PointOfInterestPlacemark]) {
+        routePointsOfInterest = poiPlacemarks
     }
 
     @MainActor
@@ -62,7 +67,7 @@ class RouteCreatorViewModel: ObservableObject {
         let sourcePlacemark = MKPlacemark(coordinate: startingPoint.coordinate)
         let routeSource = MKMapItem(placemark: sourcePlacemark)
         let destinationPlacemark = MKPlacemark(coordinate: to.coordinate)
-        var routeDestination = MKMapItem(placemark: destinationPlacemark)
+        let routeDestination = MKMapItem(placemark: destinationPlacemark)
         routeDestination.name = to.name
         request.source = routeSource
         request.destination = routeDestination
@@ -82,7 +87,7 @@ class RouteCreatorViewModel: ObservableObject {
         let sourcePlacemark = MKPlacemark(coordinate: from.coordinate)
         let routeSource = MKMapItem(placemark: sourcePlacemark)
         let destinationPlacemark = MKPlacemark(coordinate: to.coordinate)
-        var routeDestination = MKMapItem(placemark: destinationPlacemark)
+        let routeDestination = MKMapItem(placemark: destinationPlacemark)
         routeDestination.name = to.name
         request.source = routeSource
         request.destination = routeDestination
@@ -102,7 +107,7 @@ class RouteCreatorViewModel: ObservableObject {
         let sourcePlacemark = MKPlacemark(coordinate: from.coordinate)
         let routeSource = MKMapItem(placemark: sourcePlacemark)
         let destinationPlacemark = MKPlacemark(coordinate: to.coordinate)
-        var routeDestination = MKMapItem(placemark: destinationPlacemark)
+        let routeDestination = MKMapItem(placemark: destinationPlacemark)
         routeDestination.name = to.name
         request.source = routeSource
         request.destination = routeDestination
@@ -123,7 +128,10 @@ class RouteCreatorViewModel: ObservableObject {
 
     @MainActor
     func updateRoute(with placemark: PointOfInterestPlacemark) async {
-        let nearestPlacemarkIndex = findNearestPlacemarkIndex(to: placemark.coordinate)
+        guard let nearestPlacemarkIndex = findNearestPlacemarkIndex(to: placemark.coordinate) else {
+            NSLog("😢 Route cannot be updated!")
+            return
+        }
 
         var firstNewRouteSegment: MKRoute?
         var secondNewRouteSegment: MKRoute?
@@ -132,20 +140,23 @@ class RouteCreatorViewModel: ObservableObject {
         let request = MKDirections.Request()
         request.destination = MKMapItem(placemark: MKPlacemark(coordinate: placemark.coordinate))
         request.transportType = .automobile
-        if let nearestPlacemarkIndex {
-            request.source = MKMapItem(placemark: MKPlacemark(coordinate: routePlacemarks[nearestPlacemarkIndex].coordinate))
-        } else if let startingPlacemark {
-            request.source = MKMapItem(placemark: MKPlacemark(coordinate: startingPlacemark.coordinate))
+
+        if nearestPlacemarkIndex >= 0, nearestPlacemarkIndex < routeSegments.count,
+           let coordinate = routeSegments[nearestPlacemarkIndex].polyline.coordinates.first {
+            request.source = MKMapItem(placemark: MKPlacemark(coordinate: coordinate))
         }
+
         let firstDirections = MKDirections(request: request)
         let firstResult = try? await firstDirections.calculate()
         if let routeSegment = firstResult?.routes.first {
             firstNewRouteSegment = routeSegment
         }
-        if let nearestPlacemarkIndex {
-            request.destination = MKMapItem(placemark: MKPlacemark(coordinate: routePlacemarks[nearestPlacemarkIndex + 1].coordinate))
-        } else if let firstIntermediatePlacemark = routePlacemarks.first {
-            request.destination = MKMapItem(placemark: MKPlacemark(coordinate: firstIntermediatePlacemark.coordinate))
+        if nearestPlacemarkIndex >= 0, nearestPlacemarkIndex < routeSegments.count - 1,
+           let coordinate = routeSegments[nearestPlacemarkIndex + 1].polyline.coordinates.first {
+            request.destination = MKMapItem(placemark: MKPlacemark(coordinate: coordinate))
+        } else if nearestPlacemarkIndex == routeSegments.count - 1,
+                  let coordinate = routeSegments.first?.polyline.coordinates.first {
+            request.destination = MKMapItem(placemark: MKPlacemark(coordinate: coordinate))
         }
         request.source = MKMapItem(placemark: MKPlacemark(coordinate: placemark.coordinate))
         let secondDirections = MKDirections(request: request)
@@ -153,25 +164,28 @@ class RouteCreatorViewModel: ObservableObject {
         if let routeSegment = secondResult?.routes.first {
             secondNewRouteSegment = routeSegment
         }
+
         if let firstNewRouteSegment, let secondNewRouteSegment {
-            routeSegments.remove(at: nearestPlacemarkIndex ?? 0)
-            routeSegments.insert(firstNewRouteSegment, at: nearestPlacemarkIndex ?? 0)
-            routeSegments.insert(secondNewRouteSegment, at: (nearestPlacemarkIndex ?? 0) + 1)
+            routeSegments.remove(at: nearestPlacemarkIndex)
+            routeSegments.insert(firstNewRouteSegment, at: nearestPlacemarkIndex)
+            routeSegments.insert(secondNewRouteSegment, at: nearestPlacemarkIndex + 1)
         }
     }
 
     func findNearestPlacemarkIndex(to coordinate: CLLocationCoordinate2D) -> Int? {
         let selectedLocation = CLLocation(latitude: coordinate.latitude, longitude: coordinate.longitude)
         var routeLocations: [CLLocation] = []
-        if let startingPlacemark {
-            routeLocations = [CLLocation(latitude: startingPlacemark.coordinate.latitude, longitude: startingPlacemark.coordinate.longitude)]
+        routeSegments.forEach { routeSegment in
+            if let latitude = routeSegment.polyline.coordinates.first?.latitude,
+               let longitude = routeSegment.polyline.coordinates.first?.longitude {
+                routeLocations.append(CLLocation(latitude: latitude, longitude: longitude))
+            }
         }
-        routeLocations.append(contentsOf: routePlacemarks.map { CLLocation(latitude: $0.coordinate.latitude, longitude: $0.coordinate.longitude) })
 
-        // Calculate distances and find the nearest placemark
+        // Calculate distances and find the nearest route segment.
         let distances = routeLocations.map { selectedLocation.distance(from: $0) }
         if let minIndex = distances.firstIndex(of: distances.min() ?? 0) {
-            return minIndex == 0 ? nil : minIndex - 1
+            return minIndex
         }
 
         return nil

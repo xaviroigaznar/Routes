@@ -33,7 +33,6 @@ struct RouteCreatorView: View {
     @State private var startingPlacemark: Placemark?
     @State private var routePlacemarks: [RouteIntermediatePlacemark] = []
     @State private var showDetail = false
-    @State private var designRoute = false
     @State private var fetchingRoute = false
     @State private var routeDisplaying = false
     @State private var route: Route?
@@ -85,6 +84,7 @@ struct RouteCreatorView: View {
                     Task { @MainActor in
                         await viewModel.updateRoute(with: selectedPointOfInterest)
                         routePointsOfInterest.append(selectedPointOfInterest)
+                        viewModel.setPointOfInterestPlacemarks(routePointsOfInterest)
                         MapManager.removePointsOfInterestResults(modelContext)
                         fetchingRoute = false
                     }
@@ -175,18 +175,6 @@ private extension RouteCreatorView {
                     )
                     .presentationDetents([.large])
                 }
-                .onChange(of: designRoute) {
-                    if designRoute {
-                        showDetail = (viewModel.circularRoute ? routePlacemarks.count + 1 : routePlacemarks.count) == viewModel.routeSegments.count
-                        if showDetail {
-                            if let startingPlacemarkCoordinates = startingPlacemark?.coordinate {
-                                cameraPosition = .region(MKCoordinateRegion(center: startingPlacemarkCoordinates,
-                                                                            span: MKCoordinateSpan(latitudeDelta: 0.1,
-                                                                                                   longitudeDelta: 0.1)))
-                            }
-                        }
-                    }
-                }
                 .onChange(of: viewModel.showRoute) {
                     if viewModel.showRoute {
                         withAnimation {
@@ -222,9 +210,9 @@ private extension RouteCreatorView {
                     } else {
                         Marker(coordinate: placemark.coordinate) {
                             Label(placemark.name, systemImage: placemark.name == "Starting point" ?
-                                  viewModel.circularRoute ? "point.forward.to.point.capsulepath.fill" : "location.north.line" : designRoute && !viewModel.circularRoute && routePlacemarks.last == placemark ? "stop.circle" : "point.topleft.filled.down.to.point.bottomright.curvepath")
+                                  viewModel.circularRoute ? "point.forward.to.point.capsulepath.fill" : "location.north.line" : !viewModel.circularRoute && routePlacemarks.last == placemark ? "stop.circle" : "point.topleft.filled.down.to.point.bottomright.curvepath")
                         }
-                        .tint(placemark.name == "Starting point" ? .green : designRoute && !viewModel.circularRoute && routePlacemarks.last == placemark ? .red : .blue)
+                        .tint(placemark.name == "Starting point" ? .green : !viewModel.circularRoute && routePlacemarks.last == placemark ? .red : .blue)
                     }
                 }.tag(placemark)
             }
@@ -305,7 +293,12 @@ private extension RouteCreatorView {
                 if !fetchingRoute, routeDisplaying {
                     HStack(spacing: 20) {
                         Button("Create the route", systemImage: "plus.circle") {
-                            designRoute = true
+                            if let startingPlacemarkCoordinates = startingPlacemark?.coordinate {
+                                cameraPosition = .region(MKCoordinateRegion(center: startingPlacemarkCoordinates,
+                                                                            span: MKCoordinateSpan(latitudeDelta: 0.1,
+                                                                                                   longitudeDelta: 0.1)))
+                            }
+                            showDetail = true
                         }
                         Button("Discard the route", systemImage: "minus.circle") {
                             MapManager.removeSearchResults(modelContext)
