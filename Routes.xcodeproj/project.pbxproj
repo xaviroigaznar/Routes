@@ -27,6 +27,8 @@
 		454065442CD93ED30035A1B2 /* RouteCreatorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 454065432CD93ED30035A1B2 /* RouteCreatorView.swift */; };
 		45954B202CF4F90D00B2473C /* RouteWithPlacemarksMap.swift in Sources */ = {isa = PBXBuildFile; fileRef = 45954B1F2CF4F90D00B2473C /* RouteWithPlacemarksMap.swift */; };
 		45954B242CF740CB00B2473C /* MKPolyline+Coordinates.swift in Sources */ = {isa = PBXBuildFile; fileRef = 45954B232CF740CB00B2473C /* MKPolyline+Coordinates.swift */; };
+		45954B262CF8B0A300B2473C /* RouteCreatorViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 45954B252CF8B0A300B2473C /* RouteCreatorViewModel.swift */; };
+		45954B282CF8B0DB00B2473C /* RouteCreatorBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 45954B272CF8B0DB00B2473C /* RouteCreatorBuilder.swift */; };
 		45C045D92CF0CF8300026FF0 /* PointOfInterestModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 45C045D82CF0CF8300026FF0 /* PointOfInterestModel.swift */; };
 /* End PBXBuildFile section */
 
@@ -54,6 +56,8 @@
 		454065432CD93ED30035A1B2 /* RouteCreatorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RouteCreatorView.swift; sourceTree = "<group>"; };
 		45954B1F2CF4F90D00B2473C /* RouteWithPlacemarksMap.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RouteWithPlacemarksMap.swift; sourceTree = "<group>"; };
 		45954B232CF740CB00B2473C /* MKPolyline+Coordinates.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "MKPolyline+Coordinates.swift"; sourceTree = "<group>"; };
+		45954B252CF8B0A300B2473C /* RouteCreatorViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RouteCreatorViewModel.swift; sourceTree = "<group>"; };
+		45954B272CF8B0DB00B2473C /* RouteCreatorBuilder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RouteCreatorBuilder.swift; sourceTree = "<group>"; };
 		45C045D82CF0CF8300026FF0 /* PointOfInterestModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PointOfInterestModel.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -182,6 +186,8 @@
 			isa = PBXGroup;
 			children = (
 				454065432CD93ED30035A1B2 /* RouteCreatorView.swift */,
+				45954B252CF8B0A300B2473C /* RouteCreatorViewModel.swift */,
+				45954B272CF8B0DB00B2473C /* RouteCreatorBuilder.swift */,
 			);
 			path = RouteCreator;
 			sourceTree = "<group>";
@@ -293,10 +299,12 @@
 				454065342CD7C9240035A1B2 /* LocationManager.swift in Sources */,
 				454065442CD93ED30035A1B2 /* RouteCreatorView.swift in Sources */,
 				4540652C2CD798B40035A1B2 /* StartTabView.swift in Sources */,
+				45954B282CF8B0DB00B2473C /* RouteCreatorBuilder.swift in Sources */,
 				454065392CD7CDFE0035A1B2 /* RouteTrackView.swift in Sources */,
 				454065412CD7D5C40035A1B2 /* RouteLocationsMapView.swift in Sources */,
 				45954B202CF4F90D00B2473C /* RouteWithPlacemarksMap.swift in Sources */,
 				453417532CE71349009890FD /* RouteIntermediatePlacemark.swift in Sources */,
+				45954B262CF8B0A300B2473C /* RouteCreatorViewModel.swift in Sources */,
 				45954B242CF740CB00B2473C /* MKPolyline+Coordinates.swift in Sources */,
 				454065122CD622B00035A1B2 /* RoutesApp.swift in Sources */,
 			);

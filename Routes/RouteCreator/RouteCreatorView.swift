@@ -10,11 +10,18 @@ import SwiftUI
 import SwiftData
 
 struct RouteCreatorView: View {
+    // MARK: - Environment properties
     @Environment(\.modelContext) private var modelContext
     @Environment(LocationManager.self) var locationManager
+
+    // MARK: - Query properties
     @Query(filter: #Predicate<Placemark> {$0.route == nil}) private var searchPlacemarks: [Placemark]
     @Query private var listPoisPlacemarks: [PointOfInterestPlacemark]
 
+    // MARK: - Observed objects
+    @ObservedObject var viewModel: RouteCreatorViewModel
+
+    // MARK: - State properties
     @State private var visibleRegion: MKCoordinateRegion?
     @State var cameraPosition: MapCameraPosition = .userLocation(fallback: .automatic)
 
@@ -26,13 +33,10 @@ struct RouteCreatorView: View {
     @State private var startingPlacemark: Placemark?
     @State private var routePlacemarks: [RouteIntermediatePlacemark] = []
     @State private var showDetail = false
-    @State private var circularRoute = true
     @State private var designRoute = false
     @State private var fetchingRoute = false
-    @State private var showRoute = false
     @State private var routeDisplaying = false
     @State private var route: Route?
-    @State private var routeSegments: [MKRoute] = []
     @State private var routeDestination: MKMapItem?
     @State private var travelInterval: TimeInterval?
     @State private var showSteps = false
@@ -45,8 +49,16 @@ struct RouteCreatorView: View {
     @State private var poiSelectedIndex = 0
     @State private var showPoiSelectedAlert = false
     @State private var routePointsOfInterest: [PointOfInterestPlacemark] = []
+
+    // MARK: - Stored properties
     private var pointsOfInterest: [PointOfInterestModel] = [.cafe, .gasStation, .hotel, .mechanic]
 
+    // MARK: - Init
+    init(viewModel: RouteCreatorViewModel) {
+        self.viewModel = viewModel
+    }
+
+    // MARK: - Body
     var body: some View {
         ZStack {
             ZStack(alignment: .bottom) {
@@ -71,7 +83,7 @@ struct RouteCreatorView: View {
                 if let selectedPointOfInterest {
                     fetchingRoute = true
                     Task { @MainActor in
-                        await updateRoute(with: selectedPointOfInterest)
+                        await viewModel.updateRoute(with: selectedPointOfInterest)
                         routePointsOfInterest.append(selectedPointOfInterest)
                         MapManager.removePointsOfInterestResults(modelContext)
                         fetchingRoute = false
@@ -104,7 +116,7 @@ private extension RouteCreatorView {
                 Text("Circular route")
                     .foregroundStyle(Color("AppSecondary"), Color("AccentColor"))
                     .font(.headline)
-                Toggle("", isOn: $circularRoute)
+                Toggle("", isOn: $viewModel.circularRoute)
             }
             .padding(.trailing, 20)
         }
@@ -125,6 +137,7 @@ private extension RouteCreatorView {
                                                           address: "",
                                                           latitude: coordinate.latitude,
                                                           longitude: coordinate.longitude)
+                                viewModel.setStartingPlacemark(placemark)
                                 startingPlacemark = placemark
                                 modelContext.insert(placemark)
                             } else {
@@ -133,6 +146,7 @@ private extension RouteCreatorView {
                                                                            latitude: coordinate.latitude,
                                                                            longitude: coordinate.longitude)
                                 routePlacemarks.append(placemark)
+                                viewModel.setRoutePlacemarks(routePlacemarks)
                                 modelContext.insert(placemark)
                             }
                         }
@@ -154,16 +168,16 @@ private extension RouteCreatorView {
                         route: $route,
                         startPlacemark: startingPlacemark,
                         routePlacemarks: routePlacemarks,
-                        routeSegments: routeSegments,
-                        showRoute: $showRoute,
-                        circularRoute: $circularRoute,
+                        routeSegments: viewModel.routeSegments,
+                        showRoute: $viewModel.showRoute,
+                        circularRoute: $viewModel.circularRoute,
                         cameraPosition: $cameraPosition
                     )
                     .presentationDetents([.large])
                 }
                 .onChange(of: designRoute) {
                     if designRoute {
-                        showDetail = (circularRoute ? routePlacemarks.count + 1 : routePlacemarks.count) == routeSegments.count
+                        showDetail = (viewModel.circularRoute ? routePlacemarks.count + 1 : routePlacemarks.count) == viewModel.routeSegments.count
                         if showDetail {
                             if let startingPlacemarkCoordinates = startingPlacemark?.coordinate {
                                 cameraPosition = .region(MKCoordinateRegion(center: startingPlacemarkCoordinates,
@@ -173,8 +187,8 @@ private extension RouteCreatorView {
                         }
                     }
                 }
-                .onChange(of: showRoute) {
-                    if showRoute {
+                .onChange(of: viewModel.showRoute) {
+                    if viewModel.showRoute {
                         withAnimation {
                             routeDisplaying = true
                             if let startingPlacemarkCoordinates = startingPlacemark?.coordinate {
@@ -193,7 +207,7 @@ private extension RouteCreatorView {
             UserAnnotation()
             if let startingPlacemark {
                 Marker(coordinate: startingPlacemark.coordinate) {
-                    Label(startingPlacemark.name, systemImage: circularRoute ? "point.forward.to.point.capsulepath.fill" : "location.north.line")
+                    Label(startingPlacemark.name, systemImage: viewModel.circularRoute ? "point.forward.to.point.capsulepath.fill" : "location.north.line")
                 }
                 .tint(.green)
                 .tag(startingPlacemark)
@@ -208,9 +222,9 @@ private extension RouteCreatorView {
                     } else {
                         Marker(coordinate: placemark.coordinate) {
                             Label(placemark.name, systemImage: placemark.name == "Starting point" ?
-                                  circularRoute ? "point.forward.to.point.capsulepath.fill" : "location.north.line" : designRoute && !circularRoute && routePlacemarks.last == placemark ? "stop.circle" : "point.topleft.filled.down.to.point.bottomright.curvepath")
+                                  viewModel.circularRoute ? "point.forward.to.point.capsulepath.fill" : "location.north.line" : designRoute && !viewModel.circularRoute && routePlacemarks.last == placemark ? "stop.circle" : "point.topleft.filled.down.to.point.bottomright.curvepath")
                         }
-                        .tint(placemark.name == "Starting point" ? .green : designRoute && !circularRoute && routePlacemarks.last == placemark ? .red : .blue)
+                        .tint(placemark.name == "Starting point" ? .green : designRoute && !viewModel.circularRoute && routePlacemarks.last == placemark ? .red : .blue)
                     }
                 }.tag(placemark)
             }
@@ -244,9 +258,9 @@ private extension RouteCreatorView {
                 .tint(.green)
                 .tag(placemark)
             }
-            if !routeSegments.isEmpty, routeDisplaying {
+            if !viewModel.routeSegments.isEmpty, routeDisplaying {
                 Group {
-                    ForEach(routeSegments, id: \.self) { routeSegment in
+                    ForEach(viewModel.routeSegments, id: \.self) { routeSegment in
                         MapPolyline(routeSegment.polyline)
                             .stroke(Color.appSecondary, lineWidth: 4)
                     }
@@ -295,10 +309,8 @@ private extension RouteCreatorView {
                         }
                         Button("Discard the route", systemImage: "minus.circle") {
                             MapManager.removeSearchResults(modelContext)
-                            routeSegments = []
-                            startingPlacemark = nil
-                            routePlacemarks = []
                             routeDisplaying = false
+                            viewModel.removeRoute()
                         }
                     }
                     .buttonStyle(.borderedProminent)
@@ -307,10 +319,9 @@ private extension RouteCreatorView {
                     Button("Calculate the route", systemImage: "paperplane.circle") {
                         Task { @MainActor in
                             fetchingRoute = true
-                            if (circularRoute ? routePlacemarks.count + 1 : routePlacemarks.count) != routeSegments.count {
-                                await fetchRoute()
+                            if (viewModel.circularRoute ? routePlacemarks.count + 1 : routePlacemarks.count) != viewModel.routeSegments.count {
+                                await viewModel.fetchRoute()
                             }
-                            showRoute = true
                             fetchingRoute = false
                         }
                     }
@@ -325,8 +336,10 @@ private extension RouteCreatorView {
                     if !searchPlacemarks.isEmpty {
                         Button {
                             MapManager.removeSearchResults(modelContext)
-                            routeSegments = []
+                            viewModel.routeSegments = []
+                            viewModel.setStartingPlacemark(nil)
                             startingPlacemark = nil
+                            viewModel.setRoutePlacemarks([])
                             routePlacemarks = []
                         } label: {
                             Image(systemName: "mappin.slash")
@@ -363,159 +376,10 @@ private extension RouteCreatorView {
             }
         }
     }
-
-    func fetchRoute() async {
-        guard let startingPlacemark, let finishingPlacemark = routePlacemarks.first else {
-            return
-        }
-        // Calculate the first route segment (from starting placemark to the first intermediate placemark).
-        await fetchFirstRouteSegment(startingPoint: startingPlacemark, to: finishingPlacemark)
-
-        // If there is only one intermediate placemark.
-        if routePlacemarks.count == 1 {
-            // If the route is circular, calculate the last route segment (from the first intermediate placemark to the starting placemark).
-            if circularRoute {
-                await fetchCircularRouteLastSegment(from: finishingPlacemark, to: startingPlacemark)
-            } else {
-                // If the route is not circular, it has only one segment so just return.
-                return
-            }
-        } else {
-            // If the route has many intermediate placemarks, calculate the different route segments.
-            for index in 1..<routePlacemarks.count {
-                await fetchIntermediateRouteSegment(from: routePlacemarks[index - 1], to: routePlacemarks[index])
-            }
-        }
-        if circularRoute, let lastIntermediatePlacemark = routePlacemarks.last {
-            await fetchCircularRouteLastSegment(from: lastIntermediatePlacemark, to: startingPlacemark)
-        }
-    }
-
-    func fetchFirstRouteSegment(startingPoint: Placemark, to: RouteIntermediatePlacemark) async {
-        let request = MKDirections.Request()
-        request.tollPreference = .avoid
-        request.highwayPreference = .avoid
-        request.transportType = .automobile
-        let sourcePlacemark = MKPlacemark(coordinate: startingPoint.coordinate)
-        let routeSource = MKMapItem(placemark: sourcePlacemark)
-        let destinationPlacemark = MKPlacemark(coordinate: to.coordinate)
-        var routeDestination = MKMapItem(placemark: destinationPlacemark)
-        routeDestination.name = to.name
-        request.source = routeSource
-        request.destination = routeDestination
-        let directions = MKDirections(request: request)
-        let result = try? await directions.calculate()
-        if let routeSegment = result?.routes.first {
-            routeSegments.append(routeSegment)
-        }
-    }
-
-    func fetchIntermediateRouteSegment(from: RouteIntermediatePlacemark, to: RouteIntermediatePlacemark) async {
-        let request = MKDirections.Request()
-        request.tollPreference = .avoid
-        request.highwayPreference = .avoid
-        request.transportType = .automobile
-        let sourcePlacemark = MKPlacemark(coordinate: from.coordinate)
-        let routeSource = MKMapItem(placemark: sourcePlacemark)
-        let destinationPlacemark = MKPlacemark(coordinate: to.coordinate)
-        var routeDestination = MKMapItem(placemark: destinationPlacemark)
-        routeDestination.name = to.name
-        request.source = routeSource
-        request.destination = routeDestination
-        let directions = MKDirections(request: request)
-        let result = try? await directions.calculate()
-        if let routeSegment = result?.routes.first {
-            routeSegments.append(routeSegment)
-        }
-    }
-
-    func fetchCircularRouteLastSegment(from: RouteIntermediatePlacemark, to: Placemark) async {
-        let request = MKDirections.Request()
-        request.tollPreference = .avoid
-        request.highwayPreference = .avoid
-        request.transportType = .automobile
-        let sourcePlacemark = MKPlacemark(coordinate: from.coordinate)
-        let routeSource = MKMapItem(placemark: sourcePlacemark)
-        let destinationPlacemark = MKPlacemark(coordinate: to.coordinate)
-        var routeDestination = MKMapItem(placemark: destinationPlacemark)
-        routeDestination.name = to.name
-        request.source = routeSource
-        request.destination = routeDestination
-        let directions = MKDirections(request: request)
-        let result = try? await directions.calculate()
-        if let routeSegment = result?.routes.first {
-            routeSegments.append(routeSegment)
-        }
-    }
-
-    func removeRoute() {
-        MapManager.removeSearchResults(modelContext)
-        routeDisplaying = false
-        showRoute = false
-        routeSegments = []
-        startingPlacemark = nil
-        routePlacemarks = []
-        updateCameraPosition()
-    }
-
-    func updateRoute(with placemark: PointOfInterestPlacemark) async {
-        let nearestPlacemarkIndex = findNearestPlacemarkIndex(to: placemark.coordinate)
-
-        var firstNewRouteSegment: MKRoute?
-        var secondNewRouteSegment: MKRoute?
-
-        // Create a directions request
-        let request = MKDirections.Request()
-        request.destination = MKMapItem(placemark: MKPlacemark(coordinate: placemark.coordinate))
-        request.transportType = .automobile
-        if let nearestPlacemarkIndex {
-            request.source = MKMapItem(placemark: MKPlacemark(coordinate: routePlacemarks[nearestPlacemarkIndex].coordinate))
-        } else if let startingPlacemark {
-            request.source = MKMapItem(placemark: MKPlacemark(coordinate: startingPlacemark.coordinate))
-        }
-        let firstDirections = MKDirections(request: request)
-        let firstResult = try? await firstDirections.calculate()
-        if let routeSegment = firstResult?.routes.first {
-            firstNewRouteSegment = routeSegment
-        }
-        if let nearestPlacemarkIndex {
-            request.destination = MKMapItem(placemark: MKPlacemark(coordinate: routePlacemarks[nearestPlacemarkIndex + 1].coordinate))
-        } else if let firstIntermediatePlacemark = routePlacemarks.first {
-            request.destination = MKMapItem(placemark: MKPlacemark(coordinate: firstIntermediatePlacemark.coordinate))
-        }
-        request.source = MKMapItem(placemark: MKPlacemark(coordinate: placemark.coordinate))
-        let secondDirections = MKDirections(request: request)
-        let secondResult = try? await secondDirections.calculate()
-        if let routeSegment = secondResult?.routes.first {
-            secondNewRouteSegment = routeSegment
-        }
-        if let firstNewRouteSegment, let secondNewRouteSegment {
-            routeSegments.remove(at: nearestPlacemarkIndex ?? 0)
-            routeSegments.insert(firstNewRouteSegment, at: nearestPlacemarkIndex ?? 0)
-            routeSegments.insert(secondNewRouteSegment, at: (nearestPlacemarkIndex ?? 0) + 1)
-        }
-    }
-
-    func findNearestPlacemarkIndex(to coordinate: CLLocationCoordinate2D) -> Int? {
-        let selectedLocation = CLLocation(latitude: coordinate.latitude, longitude: coordinate.longitude)
-        var routeLocations: [CLLocation] = []
-        if let startingPlacemark {
-            routeLocations = [CLLocation(latitude: startingPlacemark.coordinate.latitude, longitude: startingPlacemark.coordinate.longitude)]
-        }
-        routeLocations.append(contentsOf: routePlacemarks.map { CLLocation(latitude: $0.coordinate.latitude, longitude: $0.coordinate.longitude) })
-
-        // Calculate distances and find the nearest placemark
-        let distances = routeLocations.map { selectedLocation.distance(from: $0) }
-        if let minIndex = distances.firstIndex(of: distances.min() ?? 0) {
-            return minIndex == 0 ? nil : minIndex - 1
-        }
-
-        return nil
-    }
 }
 
 #Preview {
-    RouteCreatorView()
+    RouteCreatorView(viewModel: RouteCreatorViewModel())
         .environment(LocationManager())
         .modelContainer(Route.preview)
 }

@@ -15,7 +15,7 @@ struct StartTabView: View {
                     .tabItem {
                     Label("Map", systemImage: "map")
                 }
-                RouteCreatorView()
+                RouteCreatorBuilder().build()
                     .tabItem {
                         Label("Route Creator", systemImage: "location.fill.viewfinder")
                     }
