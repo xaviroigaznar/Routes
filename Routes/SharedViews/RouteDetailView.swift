@@ -148,6 +148,7 @@ struct RouteDetailView: View {
                             .progressViewStyle(CircularProgressViewStyle())
                             .padding()
                             .frame(alignment: .center)
+                        Spacer()
                     }
                 }
             }
