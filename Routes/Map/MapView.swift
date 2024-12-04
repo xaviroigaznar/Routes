@@ -41,13 +41,15 @@ struct MapView: View {
                     .alert("What do you want?", isPresented: $isRouteSelected) {
                         Button("Show track") {
                             showTrack = true
+                            selectedPlacemarkId = nil
                         }
                         Button("Dismiss", role: .cancel) {
                             selectedRoute = nil
+                            selectedPlacemarkId = nil
                         }
                     }
                     .sheet(isPresented: $showTrack) {
-                        RouteTrackView(selectedRoute: selectedRoute, cameraPosition: $cameraPosition)
+                        RouteTrackView(selectedRoute: $selectedRoute, cameraPosition: $cameraPosition)
                             .presentationDetents([.large])
                     }
                     .onMapCameraChange { context in

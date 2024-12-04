@@ -11,7 +11,7 @@ import SwiftData
 
 struct RouteTrackView: View {
     @Environment(\.dismiss) private var dismiss
-    var selectedRoute: Route?
+    @Binding var selectedRoute: Route?
     @Binding var cameraPosition: MapCameraPosition
 
     @State private var routeSegments: [MKRoute] = []
@@ -65,6 +65,9 @@ struct RouteTrackView: View {
                 }
                 await fetchRoute()
             }
+        }
+        .onDisappear {
+            selectedRoute = nil
         }
     }
 
@@ -151,7 +154,7 @@ struct RouteTrackView: View {
     let fetchDescriptor = FetchDescriptor<Route>()
     let selectedRoute = try! container.mainContext.fetch(fetchDescriptor)[0]
     return RouteTrackView(
-        selectedRoute: selectedRoute,
+        selectedRoute: .constant(selectedRoute),
         cameraPosition: .constant(.automatic)
     )
 }
@@ -162,7 +165,7 @@ struct RouteTrackView: View {
     let routes = try! container.mainContext.fetch(fetchDescriptor)
     let selectedRoute = routes[0]
     return RouteTrackView(
-        selectedRoute: selectedRoute,
+        selectedRoute: .constant(selectedRoute),
         cameraPosition: .constant(.automatic)
     )
 }
